@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課題：京野菜カードと幾何分布シミュレーター</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 750px;
+        }
+        .assignment-box, .explanation-box {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .assignment-box h2, .explanation-box h2 {
+            color: #d35400;
+            text-align: center;
+            margin-top: 0;
+        }
+        .assignment-box h3, .explanation-box h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+        .assignment-box ol { padding-left: 20px; }
+        .assignment-box li { margin-bottom: 10px; }
+
+        .simulator-container {
+            width: 100%;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 25px 30px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .settings { margin-bottom: 20px; }
+        .settings label {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-right: 10px;
+        }
+        .settings input {
+            width: 80px;
+            padding: 8px;
+            font-size: 1.1em;
+            text-align: center;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 25px 0;
+        }
+        .controls button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e67e22;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .controls button.secondary { background-color: #2c3e50; }
+        .controls button:hover { opacity: 0.85; }
+
+        .status-display {
+            padding: 15px;
+            border-radius: 8px;
+            background: #fdf3e6;
+            min-height: 120px;
+        }
+        .coupon-grid {
+            display: grid;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .coupon {
+            width: 100%;
+            padding-bottom: 100%;
+            position: relative;
+            border-radius: 5px;
+            background-color: #bdc3c7;
+        }
+        .coupon.collected { background-color: #2ecc71; }
+        .coupon.target { background-color: #e74c3c; animation: pulse 1.5s infinite; }
+        .coupon span {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; font-weight: bold;
+            font-size: 0.8rem;
+        }
+        #simulation-log {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #34495e;
+            height: 50px;
+        }
+        .results {
+            margin-top: 20px;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        #avg-trials {
+            color: #c0392b;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .chart-container {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <div class="assignment-box">
+        <h2>課題：京野菜カードと「あと1枚の壁」</h2>
+        <h3>状況設定</h3>
+        <p>
+            京都の食品会社が、新しいスナック菓子を発売しました。おまけとして、賀茂なす、聖護院だいこん、九条ねぎといった**京野菜**のカードが1枚入っています。
+            
+            あなたは熱心にカードを集め、もう少しでコンプリートです！
+        </p>
+        
+        <h3>問題</h3>
+        <ol>
+            <li>
+                <strong>直感と検証</strong><br>
+                カードの総種類数を **10** に設定してください。あなたが既に9種類を集めているとき、最後の1枚を引くのに必要な平均購入回数は何回だと思いますか？直感で予想してから、シミュレーターで確かめてください。
+            </li>
+            <li>
+                <strong>分布の観察</strong><br>
+                シミュレーションを繰り返すと、下に**確率分布グラフ**が描かれます。青い棒グラフ（シミュレーション結果）が、オレンジの線グラフ（理論値）に徐々に近づいていくことを確認しましょう。
+            </li>
+            <li>
+                <strong>考察 (発展)</strong><br>
+                カードの総種類数を **5** や **20** に変えると、グラフの形（特にオレンジの線の傾き）はどう変わるでしょうか？その形が意味すること（出やすさ、出にくさ）を考察してみましょう。
+            </li>
+        </ol>
+    </div>
+
+    <div class="simulator-container">
+        <h2>ラストワン・シミュレーター</h2>
+        <div class="settings">
+            <label for="total-types">カードの総種類数:</label>
+            <input type="number" id="total-types" value="10" min="2" max="50">
+        </div>
+        <div class="status-display">
+            <div id="coupon-grid" class="coupon-grid"></div>
+            <div id="simulation-log">設定を確認し、シミュレーションを開始してください</div>
+        </div>
+        <div class="controls">
+            <button onclick="runSingleLastOneSim()">あと1枚を引くまで試行</button>
+            <button class="secondary" onclick="runMonteCarloLastOne(100)">100セット試行</button>
+        </div>
+        <div class="results">
+            <h3>統計結果</h3>
+            <p>平均試行回数: <span id="avg-trials">0.00</span></p>
+            <p>総シミュレーションセット数: <span id="total-simulations">0</span></p>
+            <button onclick="reset()">リセット</button>
+        </div>
+        <div class="chart-container">
+            <h3>確率分布グラフ</h3>
+            <canvas id="distributionChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="explanation-box">
+        <h2>このシミュレーションで学ぶ「幾何分布」とは？</h2>
+        <p>
+            今回のシミュレーションは、統計学で「<strong>幾何分布 (Geometric Distribution)</strong>」と呼ばれる確率分布を扱っています。
+        </p>
+        <h3>キーアイディア 💡</h3>
+        <p>
+            幾何分布は、「コイントスで初めて表が出るまでに何回かかるか？」のように、<strong>成功するまで何かを繰り返し試行したとき、成功するまでの回数が従う確率分布</strong>です。<br>
+            今回の課題では、「成功 = 最後の1枚のカードを引くこと」に相当します。
+        </p>
+        <h3>グラフの形が意味すること 📈</h3>
+        <p>
+            グラフを見ると、試行回数「1回」の確率が最も高く、回数が増えるにつれて確率が下がっていく（裾の長い）形をしています。これは、
+        </p>
+        <ul>
+            <li><strong>最も起こりやすいのは、すぐに成功する（1回目で出る）こと。</strong></li>
+            <li><strong>しかし、運が悪いと非常に多くの回数がかかってしまう（裾が長い）可能性がある。</strong></li>
+        </ul>
+        <p>
+            ということを示しています。あなたの直感（平均10回のはず）とシミュレーション結果（平均10回）が一致したのは、この分布の持つ「裾の長さ（稀にものすごく回数がかかるケース）」が平均値を押し上げているためです。
+            グラフのオレンジ色の線が幾何分布の理論値であり、シミュレーションを繰り返すほど、結果が理論に近づいていくのが分かります。
+        </p>
+        <a href="https://bellcurve.jp/statistics/course/6988.html" target="_blank">本気解説</a>
+    </div>
+    <div>
+        <p>author: G. Li, 2025</p>
+    </div>
+
+</div>
+
+<script>
+    let allTrialResults = [];
+    let distributionChart;
+
+    document.addEventListener('DOMContentLoaded', reset);
+    document.getElementById('total-types').addEventListener('change', reset);
+
+    function runSingleLastOneSim() {
+        const TOTAL_TYPES = parseInt(document.getElementById('total-types').value);
+        const { trials, history } = getLastOne(TOTAL_TYPES);
+        
+        allTrialResults.push(trials);
+        updateAll();
+
+        const log = document.getElementById('simulation-log');
+        let i = 0;
+        log.textContent = '';
+        const interval = setInterval(() => {
+            if (i < history.length - 1) {
+                log.textContent = `...${history[i]}はダブり...`;
+            } else {
+                log.textContent = `🎉 ${trials}回目で No.${history[i]} をゲット！`;
+                clearInterval(interval);
+            }
+            i++;
+        }, 300);
+    }
+
+    function runMonteCarloLastOne(times) {
+        const TOTAL_TYPES = parseInt(document.getElementById('total-types').value);
+        for (let i = 0; i < times; i++) {
+            const { trials } = getLastOne(TOTAL_TYPES);
+            allTrialResults.push(trials);
+        }
+        updateAll();
+        document.getElementById('simulation-log').textContent = `${times}回のシミュレーションを実行しました。`;
+    }
+    
+    function getLastOne(totalTypes) {
+        const TARGET_COUPON = totalTypes;
+        let trials = 0;
+        let history = [];
+        while (true) {
+            trials++;
+            const drawnCoupon = Math.floor(Math.random() * totalTypes) + 1;
+            history.push(drawnCoupon);
+            if (drawnCoupon === TARGET_COUPON) break;
+        }
+        return { trials, history };
+    }
+
+    function updateAll() {
+        updateStats();
+        updateChart();
+    }
+
+    function updateStats() {
+        if (allTrialResults.length === 0) return;
+        const totalSum = allTrialResults.reduce((sum, val) => sum + val, 0);
+        const average = (totalSum / allTrialResults.length).toFixed(2);
+        document.getElementById('avg-trials').textContent = average;
+        document.getElementById('total-simulations').textContent = allTrialResults.length;
+    }
+    
+    function drawCoupons(total) {
+        const grid = document.getElementById('coupon-grid');
+        grid.innerHTML = '';
+        const columns = Math.min(total, 10);
+        grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+        for (let i = 1; i <= total; i++) {
+            const couponDiv = document.createElement('div');
+            const span = document.createElement('span');
+            couponDiv.classList.add('coupon');
+            span.textContent = i;
+            if (i < total) {
+                couponDiv.classList.add('collected');
+            } else {
+                couponDiv.classList.add('target');
+            }
+            couponDiv.appendChild(span);
+            grid.appendChild(couponDiv);
+        }
+    }
+
+    function initializeChart() {
+        const ctx = document.getElementById('distributionChart').getContext('2d');
+        if (distributionChart) {
+            distributionChart.destroy();
+        }
+        distributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '度数 / 理論上の度数' } },
+                    x: { title: { display: true, text: '成功までの試行回数 (k)' } }
+                }
+            }
+        });
+    }
+
+    function updateChart() {
+        if (!allTrialResults.length) return;
+        const totalTypes = parseInt(document.getElementById('total-types').value);
+        const p = 1 / totalTypes;
+
+        const frequencies = {};
+        allTrialResults.forEach(trial => {
+            frequencies[trial] = (frequencies[trial] || 0) + 1;
+        });
+
+        const maxTrial = Math.max(20, ...Object.keys(frequencies).map(Number));
+        const labels = Array.from({ length: maxTrial }, (_, i) => i + 1);
+        const simData = labels.map(label => frequencies[label] || 0);
+
+        const theoreticalData = labels.map(k => Math.pow(1 - p, k - 1) * p * allTrialResults.length);
+
+        distributionChart.data.labels = labels;
+        distributionChart.data.datasets = [{
+            label: 'シミュレーション結果 (度数)',
+            data: simData,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }, {
+            label: `理論値 (幾何分布 p=1/${totalTypes})`,
+            data: theoreticalData,
+            type: 'line',
+            borderColor: 'rgba(255, 159, 64, 1)',
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            fill: false,
+            tension: 0.1
+        }];
+        distributionChart.update();
+    }
+
+    function reset() {
+        allTrialResults = [];
+        const totalTypes = parseInt(document.getElementById('total-types').value) || 10;
+        
+        document.getElementById('avg-trials').textContent = '0.00';
+        document.getElementById('total-simulations').textContent = '0';
+        document.getElementById('simulation-log').textContent = 'ボタンを押してシミュレーション開始';
+        
+        drawCoupons(totalTypes);
+        initializeChart();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【講義資料一体型】インタラクティブ確率分布シミュレーター</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #005a9c;
+            text-align: center;
+        }
+        .main-container {
+             width: 100%;
+             max-width: 850px;
+        }
+        .intro-box {
+            background-color: #e9f5ff;
+            border-left: 4px solid #007bff;
+            padding: 15px 20px;
+            margin: 10px 0 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .container {
+            width: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #495057;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .tab-button:hover {
+            color: #005a9c;
+        }
+        .tab-button.active {
+            color: #005a9c;
+            font-weight: 700;
+        }
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #005a9c;
+        }
+        .content {
+            display: none;
+        }
+        .content.active {
+            display: block;
+        }
+        .content h4 {
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #005a9c;
+            border-left: 3px solid #007bff;
+            padding-left: 8px;
+        }
+        .content ul {
+            margin-top: 5px;
+            padding-left: 25px;
+            list-style-type: '👉';
+            padding-inline-start: 1em;
+        }
+        .content li {
+            margin-bottom: 5px;
+            padding-left: 8px;
+        }
+        .instruction {
+            margin-top: 20px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .controls label {
+            font-weight: 500;
+        }
+        .controls input[type="number"], .controls input[type="range"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        .controls button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>確率分布を体験しよう！ 🎲</h1>
+    
+    <div class="intro-box">
+        <h3>そもそも「確率分布」って何？</h3>
+        <p>
+            「分布」と聞くと難しそうですが、これは私たちの身の回りにある「不確かさ」を理解するための、とても便利な<strong>地図</strong>のようなものです。<br>
+            一言でいうと、「<b>ある出来事の、すべての結果と、それぞれの結果が起こる確率を一覧にしたもの</b>」です。
+            例えばサイコロを1回振ると、起こりうる結果は {1, 2, 3, 4, 5, 6} で、それぞれの確率はすべて $\frac{1}{6}$ ですね。これをグラフにしたものが最もシンプルな確率分布です。
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('uniform')">一様分布</button>
+            <button class="tab-button" onclick="openTab('binomial')">二項分布</button>
+            <button class="tab-button" onclick="openTab('normal')">正規分布</button>
+        </div>
+
+        <div id="uniform" class="content active">
+            <h2>一様分布 (Uniform Distribution)</h2>
+            <h4>考え方</h4>
+            <p>これは「<strong>すべての結果が同じ確率で起こる</strong>」という、最も公平でシンプルな分布です。どの目が出やすいという偏りが一切ありません。</p>
+            <h4>身近な例</h4>
+            <ul>
+                <li>サイコロを1回振ったときに出る目</li>
+                <li>ルーレットの針がどこで止まるか</li>
+            </ul>
+            <p class="instruction">👇 下のボタンを押してシミュレーションを開始し、グラフの棒の高さが揃っていく様子を観察しましょう。</p>
+            <div class="controls">
+                <button onclick="runUniform(1)">1回振る</button>
+                <button onclick="runUniform(100)">100回振る</button>
+                <button onclick="resetChart('uniform')">リセット</button>
+                <div id="uniform-total">総試行回数: 0</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="uniformChart"></canvas>
+            </div>
+        </div>
+
+        <div id="binomial" class="content">
+            <h2>二項分布 (Binomial Distribution)</h2>
+            <h4>考え方</h4>
+            <p>コイン投げのように「<strong>『はい』か『いいえ』（成功か失敗）の結果になる試行を、決まった回数繰り返したときの『成功回数』</strong>」の分布。多くの場合、真ん中の回数が一番起こりやすくなります。</p>
+            <h4>身近な例</h4>
+            <ul>
+                <li>コインを10回投げて、表が出た回数</li>
+                <li>バスケットボール選手がフリースローを5回投げて、成功した回数</li>
+            </ul>
+            <p class="instruction">👇 「コインの枚数」と「表の出る確率」を設定して、どのような形の山ができるか試してみましょう。</p>
+            <div class="controls">
+                <label for="n-trials">コインの枚数 (n):</label>
+                <input type="number" id="n-trials" value="10" min="1" max="50">
+                <label for="p-prob">表の出る確率 (p):</label>
+                <input type="range" id="p-prob" value="0.5" min="0" max="1" step="0.01">
+                <button onclick="runBinomial()">100セット試行</button>
+                <button onclick="resetChart('binomial')">リセット</button>
+                <div id="binomial-total">総セット数: 0</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="binomialChart"></canvas>
+            </div>
+        </div>
+
+        <div id="normal" class="content">
+            <h2>正規分布 (Normal Distribution)</h2>
+            <h4>考え方</h4>
+            <p>身長やテストの点数など、自然界や社会で最もよく見られる分布。「<strong>平均値の周りにデータが最も多く集まり、平均から離れるほどデータが少なくなる</strong>」という特徴があり、美しい「ベルカーブ」を描きます。</p>
+            <h4>身近な例</h4>
+            <ul>
+                <li>日本人成人男性の身長</li>
+                <li>大学のテストの点数</li>
+                <li>工場で作られる製品の重さのばらつき</li>
+            </ul>
+            <p class="instruction">👇 「平均」と「標準偏差」を変えると、ベルカーブの形や位置がどう変わるか観察してみましょう。</p>
+            <div class="controls">
+                <label for="mean">平均 (μ):</label>
+                <input type="number" id="mean" value="100" step="1">
+                <label for="stddev">標準偏差 (σ):</label>
+                <input type="number" id="stddev" value="15" min="1" step="1">
+                <button onclick="runNormal()">100個データ生成</button>
+                <button onclick="resetChart('normal')">リセット</button>
+                <div id="normal-total">総データ数: 0</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="normalChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 以前のJavaScriptコードと同一のため、ここでは省略します。
+    // 実際のファイルには、前の回答の<script>タグ内のコードを
+    // そのままここに貼り付けてください。
+    let charts = {};
+    const initialData = {
+        uniform: {
+            labels: ['1', '2', '3', '4', '5', '6'],
+            datasets: [{
+                label: '出た回数',
+                data: [0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        binomial: {
+            labels: Array.from({length: 11}, (_, i) => i.toString()),
+            datasets: [{
+                label: 'セット数',
+                data: Array(11).fill(0),
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        normal: {
+            datasets: [{
+                label: '生成データ (ヒストグラム)',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                barPercentage: 1.0,
+                categoryPercentage: 1.0
+            }, {
+                label: '理論上の正規分布曲線',
+                data: [],
+                type: 'line',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 2,
+                fill: false,
+                pointRadius: 0
+            }]
+        }
+    };
+
+    function createChart(id, type, data, options) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if (charts[id.replace('Chart', '')]) {
+            charts[id.replace('Chart', '')].destroy();
+        }
+        charts[id.replace('Chart', '')] = new Chart(ctx, { type, data, options });
+    }
+
+    window.onload = function() {
+        createChart('uniformChart', 'bar', JSON.parse(JSON.stringify(initialData.uniform)), { scales: { y: { beginAtZero: true, title: { display: true, text: '回数' } } }, responsive: true, maintainAspectRatio: false });
+        createChart('binomialChart', 'bar', JSON.parse(JSON.stringify(initialData.binomial)), { scales: { y: { beginAtZero: true, title: { display: true, text: 'セット数' } }, x: { title: {display: true, text: '成功回数'} } }, responsive: true, maintainAspectRatio: false });
+        createChart('normalChart', 'bar', JSON.parse(JSON.stringify(initialData.normal)), {
+            scales: {
+                x: { type: 'linear', beginAtZero: false, title: { display: true, text: '値' } },
+                y: { beginAtZero: true, title: { display: true, text: 'データ数' } }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        });
+        normalDataPoints = []; // Reset on load
+    };
+
+    function openTab(tabName) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
+    }
+
+    function resetChart(chartName) {
+        const chart = charts[chartName];
+        if (chartName === 'uniform') {
+            chart.data.datasets[0].data.fill(0);
+            document.getElementById('uniform-total').innerText = `総試行回数: 0`;
+        } else if (chartName === 'binomial') {
+            const n = parseInt(document.getElementById('n-trials').value);
+            chart.data.labels = Array.from({length: n + 1}, (_, i) => i.toString());
+            chart.data.datasets[0].data = Array(n + 1).fill(0);
+            document.getElementById('binomial-total').innerText = `総セット数: 0`;
+        } else if (chartName === 'normal') {
+            normalDataPoints = [];
+            chart.data.datasets[0].data = [];
+            chart.data.datasets[1].data = [];
+            chart.data.labels = [];
+            document.getElementById('normal-total').innerText = `総データ数: 0`;
+        }
+        chart.update();
+    }
+    
+    // --- Simulation Functions ---
+    
+    function runUniform(times) {
+        const chart = charts.uniform;
+        const data = chart.data.datasets[0].data;
+        for (let i = 0; i < times; i++) {
+            const roll = Math.floor(Math.random() * 6);
+            data[roll]++;
+        }
+        const total = data.reduce((a, b) => a + b, 0);
+        document.getElementById('uniform-total').innerText = `総試行回数: ${total}`;
+        chart.update();
+    }
+
+    function runBinomial() {
+        const chart = charts.binomial;
+        const n = parseInt(document.getElementById('n-trials').value);
+        const p = parseFloat(document.getElementById('p-prob').value);
+        
+        // Ensure labels and data array are correct size
+        if (chart.data.labels.length !== n + 1) {
+            chart.data.labels = Array.from({length: n + 1}, (_, i) => i.toString());
+            chart.data.datasets[0].data = Array(n + 1).fill(0);
+        }
+        
+        const currentData = chart.data.datasets[0].data;
+        
+        for (let i = 0; i < 100; i++) {
+            let successes = 0;
+            for (let j = 0; j < n; j++) {
+                if (Math.random() < p) {
+                    successes++;
+                }
+            }
+            if (successes <= n) {
+                currentData[successes]++;
+            }
+        }
+        
+        const total = currentData.reduce((a, b) => a + b, 0);
+        document.getElementById('binomial-total').innerText = `総セット数: ${total}`;
+        chart.update();
+    }
+
+    let normalDataPoints = [];
+    function runNormal() {
+        const chart = charts.normal;
+        const mean = parseFloat(document.getElementById('mean').value);
+        const stddev = parseFloat(document.getElementById('stddev').value);
+
+        if (isNaN(mean) || isNaN(stddev) || stddev <= 0) {
+            alert("有効な平均値と正の標準偏差を入力してください。");
+            return;
+        }
+
+        for (let i = 0; i < 100; i++) {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+            normalDataPoints.push(z * stddev + mean);
+        }
+
+        const binCount = Math.max(10, Math.floor(Math.sqrt(normalDataPoints.length)));
+        const dataMin = Math.min(...normalDataPoints);
+        const dataMax = Math.max(...normalDataPoints);
+        
+        const binWidth = (dataMax - dataMin) / binCount;
+        const bins = new Array(binCount).fill(0);
+        const labels = new Array(binCount);
+
+        for(let i=0; i<binCount; i++){
+            labels[i] = (dataMin + i * binWidth).toFixed(1);
+        }
+        
+        normalDataPoints.forEach(point => {
+            let binIndex = Math.floor((point - dataMin) / binWidth);
+            if (binIndex >= binCount) binIndex = binCount - 1;
+            if (binIndex >= 0) bins[binIndex]++;
+        });
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = bins;
+        
+        const curveData = [];
+        const pdf = (x, mu, sigma) => (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+        const scaleFactor = normalDataPoints.length * binWidth;
+        
+        for (let i = 0; i < binCount; i++) {
+            const x = dataMin + i * binWidth;
+            curveData.push({x: x.toFixed(1), y: pdf(x, mean, stddev) * scaleFactor});
+        }
+        
+        chart.data.datasets[1].data = curveData;
+
+        document.getElementById('normal-total').innerText = `総データ数: ${normalDataPoints.length}`;
+        chart.update();
+    }
+
+    document.getElementById('n-trials').addEventListener('change', () => resetChart('binomial'));
+    document.getElementById('mean').addEventListener('change', () => resetChart('normal'));
+    document.getElementById('stddev').addEventListener('change', () => resetChart('normal'));
+</script>
+</body>
+</html>
