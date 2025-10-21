@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【V3.11: 最終版】インタラクティブ教材 相関係数</title>
+    
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2em;
+        }
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        /* Example Styles */
+        .examples-container {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .example {
+            width: 30%;
+            min-width: 200px;
+            margin-bottom: 20px;
+        }
+        .example svg {
+            width: 100%;
+            height: 180px;
+            border: 1px solid #ccc;
+            background-color: #fdfdfd;
+            border-radius: 5px;
+        }
+        .example p {
+            font-weight: bold;
+            margin-top: 5px;
+            color: #34495e;
+        }
+
+        /* Simulator Styles */
+        #chart-wrapper {
+            position: relative;
+            padding: 30px 10px 10px 40px; /* Space for labels */
+        }
+        #chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border: 1px solid #bdc3c7;
+            background-color: #fdfdfd;
+            cursor: crosshair;
+        }
+        /* Added axis lines to chart-container for clarity */
+        #chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1px;
+            height: 100%;
+            background-color: #333; /* Y-axis line */
+        }
+        #chart-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: #333; /* X-axis line */
+        }
+
+        .axis-label {
+            position: absolute;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+        #y-axis-label {
+            transform: rotate(-90deg);
+            left: -30px; /* Adjusted position */
+            top: 50%;
+            transform-origin: 0 0;
+            white-space: nowrap;
+        }
+        #x-axis-label {
+            bottom: -30px; /* Adjusted position */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        .point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #3498db;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid white;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.8);
+        }
+        #correlation-value {
+            font-size: 1.5em; font-weight: bold; text-align: center; color: #2980b9;
+            background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin-top: 10px; transition: background-color 0.3s;
+        }
+        .controls {
+            text-align: center; margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px; font-size: 1em; border: none; border-radius: 5px; cursor: pointer;
+            transition: background-color 0.3s ease; margin: 0 10px; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #undo-button { background-color: #3498db; }
+        #undo-button:hover { background-color: #2980b9; }
+        #clear-button { background-color: #e67e22; }
+        #clear-button:hover { background-color: #d35400; }
+        
+        /* Calculation & Caution Section Styles */
+        .formula-box {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            font-size: 1.2em;
+            text-align: center;
+            overflow-x: auto;
+        }
+        .caution {
+            background-color: #fff9e6; border-left: 5px solid #f1c40f; padding: 15px; margin-top: 20px; border-radius: 5px;
+        }
+        .summary-list {
+            list-style-type: '✅ '; padding-left: 20px;
+        }
+        
+        /* Quiz Section Styles */
+        .quiz-question {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        details {
+            margin-top: 15px;
+            background-color: #eaf2f8;
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>GTデータ科学 インタラクティブ教材 相関係数</h1>
+
+    <div class="section">
+        <h2>1. 相関係数とは？ 📈</h2>
+        <p>
+            一言でいうと、相関係数とは<b>「2つのデータ（変数）の直線的な関係の強さと方向を示す指標」</b>です。
+            「片方のデータが増えたとき、もう片方のデータは増える傾向にあるのか、それとも減る傾向にあるのか」という関係性を、<code>-1</code> から <code>+1</code> までの数値（記号 $r$ で表される）で示します。
+        </p>
+    </div>
+    
+    <hr>
+
+    <div class="section">
+        <h2>2. 具体的な例を見てみよう</h2>
+        <p>
+            相関係数の値とグラフの見た目には、以下のような対応関係があります。
+        </p>
+        <div class="examples-container">
+            <div class="example">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="20" cy="80" r="2"/><circle cx="25" cy="75" r="2"/><circle cx="30"cy="70" r="2"/><circle cx="35" cy="68" r="2"/><circle cx="40" cy="60" r="2"/><circle cx="45" cy="55" r="2"/><circle cx="50" cy="50" r="2"/><circle cx="55" cy="48" r="2"/><circle cx="60" cy="40" r="2"/><circle cx="65" cy="35" r="2"/><circle cx="70" cy="30" r="2"/><circle cx="75" cy="25" r="2"/><circle cx="80" cy="20" r="2"/>
+                </svg>
+                <p>強い正の相関 (r ≈ +0.9)</p>
+            </div>
+            <div class="example">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="20" cy="20" r="2"/><circle cx="25" cy="25" r="2"/><circle cx="30"cy="30" r="2"/><circle cx="35" cy="32" r="2"/><circle cx="40" cy="40" r="2"/><circle cx="45" cy="45" r="2"/><circle cx="50" cy="50" r="2"/><circle cx="55" cy="52" r="2"/><circle cx="60" cy="60" r="2"/><circle cx="65" cy="65" r="2"/><circle cx="70" cy="70" r="2"/><circle cx="75" cy="75" r="2"/><circle cx="80" cy="80" r="2"/>
+                </svg>
+                <p>強い負の相関 (r ≈ -0.9)</p>
+            </div>
+            <div class="example">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="20" cy="50" r="2"/><circle cx="35" cy="25" r="2"/><circle cx="25"cy="70" r="2"/><circle cx="50" cy="80" r="2"/><circle cx="40" cy="40" r="2"/><circle cx="65" cy="60" r="2"/><circle cx="50" cy="20" r="2"/><circle cx="80" cy="45" r="2"/><circle cx="60" cz="75" r="2"/><circle cx="75" cy="30" r="2"/>
+                </svg>
+                <p>ほぼ無相関 (r ≈ 0)</p>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    
+    <div class="section">
+        <h2>3. シミュレーターで体験しよう！👇</h2>
+        <p>
+            下のエリアをクリックして点を追加し、相関係数がどう変わるか見てみましょう。X軸、Y軸ともに値は原点(左下)から右、上に向かって増えます。
+        </p>
+
+        <div id="chart-wrapper">
+            <div id="chart-container"></div>
+            <div id="y-axis-label" class="axis-label">Y軸 (変数2)</div>
+            <div id="x-axis-label" class="axis-label">X軸 (変数1)</div>
+        </div>
+        <div id="correlation-value">相関係数: 点を追加してください</div>
+        <div class="controls">
+            <button id="undo-button">最後の点を削除</button>
+            <button id="clear-button">全クリア</button>
+        </div>
+    </div>
+    
+    <hr>
+
+    <div class="section">
+        <h2>4.【参考】相関係数はどう計算するの？ 🧮</h2>
+        <p>
+            一般的に使われる「ピアソンの積率相関係数」は、以下の式で計算されます。
+        </p>
+        <div class="formula-box">
+            $r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2}\sqrt{\sum_{i=1}^{n}(y_i - \bar{y})^2}}$
+        </div>
+        <ul>
+            <li><strong>分子 (式の上側)</strong>: 「Xの平均からのズレ」と「Yの平均からのズレ」を掛け合わせたものの合計です。これは<strong>共分散</strong>と呼ばれ、2つの変数が一緒に動く度合いを示します。</li>
+            <li><strong>分母 (式の下側)</strong>: XとYそれぞれの「ズレの大きさ（標準偏差に関連）」です。これにより、分子の値を「正規化」し、必ず-1から+1の範囲に収まるように調整しています。</li>
+        </ul>
+    </div>
+
+    <hr>
+    
+    <div class="section">
+        <h2>5. 最重要ルール：相関は因果ではない！ ⚠️</h2>
+        <p>
+            <span class="highlight">「相関関係は、因果関係を意味しない」</span>これはデータ分析で最も重要なルールの1つです。
+        </p>
+        <div class="caution">
+            <strong>有名な例: 「アイスクリームの売上」と「水難事故の件数」</strong><br>
+            この2つには強い正の相関がありますが、「アイスが売れるから水難事故が増える」わけではありません。本当の原因は、両者に影響を与える<strong>「気温」</strong>という隠れた変数（交絡因子）です。
+        </div>
+    </div>
+
+    <hr>
+    
+    <div class="section">
+        <h2>6. まとめ 📝</h2>
+        <ul class="summary-list">
+            <li>相関係数は、2つのデータの<span class="highlight">直線的な関係の強さと方向</span>を <code>-1</code> から <code>+1</code> の数値で示す。</li>
+            <li>典型的なパターンを覚えた上で、シミュレーターで<span class="highlight">直感的な理解</span>を深めることが重要。</li>
+            <li>計算の仕組みは、各データの平均からの<span class="highlight">ズレ（偏差）</span>が基本になっている。</li>
+            <li>そして最も重要なこと：<span class="highlight">相関関係は因果関係ではない！</span></li>
+        </ul>
+    </div>
+    
+    <hr>
+
+    <div class="section">
+        <h2>7. チャレンジクイズ 🏆</h2>
+        <p>シミュレーターを操作しながら、以下の問題に挑戦して理解度をチェックしましょう。</p>
+
+        <div class="quiz-question">
+            <h3>問1：相関の強さを操ろう！</h3>
+            <p>シミュレーターで、以下の2つの条件をそれぞれ満たしてください。</p>
+            <ol>
+                <li>相関係数 $(r)$ の値が <strong>+0.8</strong> を超える状態。</li>
+                <li>相関係数 $(r)$ の値が <strong>-0.8</strong> を下回る状態。</li>
+            </ol>
+            <details>
+                <summary>解答と解説を見る</summary>
+                <div>
+                    <h4>解説</h4>
+                    <p>1. <strong>(+0.8以上):</strong> 点が<strong>細い帯状に、かつ右肩上がりの傾向</strong>で並んでいるはずです。点が直線に近づくほど、$r$ は+1に近づきます。</p>
+                    <p>2. <strong>(-0.8以下):</strong> 点が<strong>細い帯状に、かつ右肩下がりの傾向</strong>で並んでいるはずです。点が直線に近づくほど、$r$ は-1に近づきます。</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="quiz-question">
+            <h3>問2：外れ値（outlier）の絶大な影響！</h3>
+            <p>
+                1. まず、点が5〜6個で、強い正の相関（例：$r > +0.9$）となるように、右肩上がりの直線に近い配置を作ります。<br>
+                2. 次に、その点たちから大きく離れた<strong>右下</strong>の位置に、点を一つだけ追加します。
+            </p>
+            <p><strong>【問題】</strong> 点を追加した後、相関係数 $(r)$ はどのように変化しましたか？また、それはなぜだと考えられますか？</p>
+            <details>
+                <summary>解答と解説を見る</summary>
+                <div>
+                    <h4>解答</h4>
+                    <p>相関係数は<strong>大幅に小さくなりました</strong>（0に近づきました）。</p>
+                    <h4>解説</h4>
+                    <p>相関係数は、全ての点がどれだけ「一本の直線」に沿っているかを評価します。初めの右肩上がりの点の集まりが示唆する「正の関係」に対して、一つだけ追加された右下の「外れ値」は、その傾向から大きく外れています。このたった一つの点が全体の平均的な関係性を大きく歪め、<strong>全体の直線的な関係を弱めてしまう</strong>ため、相関係数が0に近づきます。これは、外れ値がデータ分析に与える影響の大きさを示す良い例です。</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="quiz-question">
+            <h3>問3：「関係性」はあるのに「相関」はゼロ？ 🤔</h3>
+            <p>点を10個以上使って、「何らかのハッキリとした規則性や関係性がある」点の配置を作ることを目指してください。ただし、その結果表示される<strong>相関係数 $(r)$ の値は-0.1から+0.1の間（ほぼ0）</strong>になるようにしてください。</p>
+            <p><strong>【問題】</strong> これが達成できた場合、その点の配置はどのような形になっていますか？そして、この結果からわかる「相関係数の限界」あるいは「注意点」とは何でしょうか？</p>
+            <details>
+                <summary>解答と解説を見る</summary>
+                <div>
+                    <h4>解答</h4>
+                    <p><strong>【配置の形】</strong>: U字型（二次関数のような形）、円形、あるいは山形などが考えられます。</p>
+                    <h4>解説</h4>
+                    <p>この結果からわかるのは、「<span class="highlight">相関係数は、あくまで2つの変数の『直線的な関係』の強さしか測れない</span>」という限界です。</p>
+                    <p>U字型のようなハッキリとした関係性（非線形な関係）があっても、右肩上がりや右肩下がりといった「直線的な」傾向はないため、相関係数は0に近い値を示します。データを見る際は、散布図をプロットして<strong>視覚的に関係性を確認</strong>し、相関係数の値だけを鵜呑みにしないことが非常に重要です。</p>
+                </div>
+            </details>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const chartContainer = document.getElementById('chart-container');
+    const correlationValueDisplay = document.getElementById('correlation-value');
+    const clearButton = document.getElementById('clear-button');
+    const undoButton = document.getElementById('undo-button');
+    let points = [];
+
+    // Y座標を反転させるヘルパー関数
+    function invertY(y, containerHeight) {
+        return containerHeight - y;
+    }
+
+    function calculateCorrelation(data) {
+        if (data.length < 2) return NaN;
+        const n = data.length;
+        
+        // シミュレーターの表示Y座標を一般的なグラフのY座標に変換して計算に使用
+        const transformedData = data.map(p => ({
+            x: p.x,
+            y: invertY(p.y, chartContainer.clientHeight) 
+        }));
+
+        const sumX = transformedData.reduce((acc, p) => acc + p.x, 0);
+        const sumY = transformedData.reduce((acc, p) => acc + p.y, 0);
+        const meanX = sumX / n;
+        const meanY = sumY / n;
+        let numerator = 0;
+        let sumSqDiffX = 0;
+        let sumSqDiffY = 0;
+        for (let i = 0; i < n; i++) {
+            const diffX = transformedData[i].x - meanX;
+            const diffY = transformedData[i].y - meanY;
+            numerator += diffX * diffY;
+            sumSqDiffX += Math.pow(diffX, 2);
+            sumSqDiffY += Math.pow(diffY, 2);
+        }
+        const denominator = Math.sqrt(sumSqDiffX * sumSqDiffY);
+        if (denominator === 0) return NaN;
+        return numerator / denominator;
+    }
+
+    function updateChart() {
+        chartContainer.innerHTML = '';
+        points.forEach(p => {
+            const pointElement = document.createElement('div');
+            pointElement.className = 'point';
+            pointElement.style.left = `${(p.x / chartContainer.clientWidth) * 100}%`;
+            pointElement.style.top = `${(p.y / chartContainer.clientHeight) * 100}%`; /* 表示は元のY座標のまま */
+            chartContainer.appendChild(pointElement);
+        });
+
+        const correlation = calculateCorrelation(points);
+        if (points.length < 2) {
+            correlationValueDisplay.textContent = `相関係数: 少なくとも2点必要です (${points.length}点)`;
+            correlationValueDisplay.style.backgroundColor = '#ecf0f1';
+        } else if (isNaN(correlation)) {
+            correlationValueDisplay.textContent = '相関係数: 計算不可';
+            correlationValueDisplay.style.backgroundColor = '#f1c40f';
+        } else {
+            correlationValueDisplay.textContent = `相関係数 (r) = ${correlation.toFixed(4)}`;
+            if (correlation > 0.7) correlationValueDisplay.style.backgroundColor = '#d4efdf'; /* Green */
+            else if (correlation < -0.7) correlationValueDisplay.style.backgroundColor = '#f5b7b1'; /* Red */
+            else correlationValueDisplay.style.backgroundColor = '#eaf2f8'; /* Blue */
+        }
+    }
+
+    chartContainer.addEventListener('click', (event) => {
+        const rect = chartContainer.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        points.push({ x: x, y: y });
+        updateChart();
+    });
+
+    clearButton.addEventListener('click', () => {
+        points = [];
+        updateChart();
+    });
+
+    undoButton.addEventListener('click', () => {
+        if (points.length > 0) {
+            points.pop();
+            updateChart();
+        }
+    });
+    
+    // Initial and resize update
+    window.addEventListener('resize', updateChart);
+    updateChart();
+</script>
+
+</body>
+</html>
