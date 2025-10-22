@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【V3.11: 最終版】インタラクティブ教材 相関係数</title>
+    <title>相関係数シミュレーター</title>
     
     <script>
       MathJax = {
@@ -46,6 +46,10 @@
         h2 {
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
+        }
+        h3 {
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
         }
         .section {
             margin-bottom: 40px;
@@ -167,6 +171,13 @@
             text-align: center;
             overflow-x: auto;
         }
+        code {
+            background-color: #eef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
         .caution {
             background-color: #fff9e6; border-left: 5px solid #f1c40f; padding: 15px; margin-top: 20px; border-radius: 5px;
         }
@@ -199,16 +210,15 @@
 
 <div class="container">
 
-    <h1>GTデータ科学 インタラクティブ教材 相関係数</h1>
+    <h1>【V3.3.1】データ科学インタラクティブ教材 相関係数</h1>
 
     <div class="section">
         <h2>1. 相関係数とは？ 📈</h2>
         <p>
-            一言でいうと、相関係数とは<b>「2つのデータ（変数）の直線的な関係の強さと方向を示す指標」</b>です。
+            一言でいうと、相関係数とは<strong>「2つのデータ（変数）の直線的な関係の強さと方向を示す指標」</strong>です。
             「片方のデータが増えたとき、もう片方のデータは増える傾向にあるのか、それとも減る傾向にあるのか」という関係性を、<code>-1</code> から <code>+1</code> までの数値（記号 $r$ で表される）で示します。
         </p>
     </div>
-    
     <hr>
 
     <div class="section">
@@ -272,6 +282,26 @@
             <li><strong>分子 (式の上側)</strong>: 「Xの平均からのズレ」と「Yの平均からのズレ」を掛け合わせたものの合計です。これは<strong>共分散</strong>と呼ばれ、2つの変数が一緒に動く度合いを示します。</li>
             <li><strong>分母 (式の下側)</strong>: XとYそれぞれの「ズレの大きさ（標準偏差に関連）」です。これにより、分子の値を「正規化」し、必ず-1から+1の範囲に収まるように調整しています。</li>
         </ul>
+        <div class="caution">
+            <strong>本気解説：</strong><br>
+            <ul>
+                <li><a href="https://mathlandscape.com/covariance/" target="_blank">データの共分散の定義と求め方の具体例・性質</a></li>
+                <li><a href="https://bellcurve.jp/statistics/course/9591.html" target="_blank">相関係数と無相関検定</a></li>
+            </ul>
+        </div>
+        
+        <h3>Excelでの計算方法 💻</h3>
+        <p>
+            この複雑な計算も、Excelのような表計算ソフトを使えば関数一つで簡単に行えます。
+        </p>
+        <ul>
+            <li><strong>使用する関数:</strong> <code>CORREL</code> 関数 (または <code>PEARSON</code> 関数)</li>
+            <li><strong>使い方:</strong> <code>=CORREL(配列1, 配列2)</code></li>
+            <li><strong>例:</strong> 変数1のデータがA列（A1からA10）に、変数2のデータがB列（B1からB10）に入力されている場合、セルに
+                <code>=CORREL(A1:A10, B1:B10)</code>
+                と入力すれば、相関係数 $r$ が計算されます。
+            </li>
+        </ul>
     </div>
 
     <hr>
@@ -285,6 +315,7 @@
             <strong>有名な例: 「アイスクリームの売上」と「水難事故の件数」</strong><br>
             この2つには強い正の相関がありますが、「アイスが売れるから水難事故が増える」わけではありません。本当の原因は、両者に影響を与える<strong>「気温」</strong>という隠れた変数（交絡因子）です。
         </div>
+        <p>参考資料：<a href="https://bellcurve.jp/statistics/course/9589.html" target="_blank">相関関係と因果関係</a></p>
     </div>
 
     <hr>
@@ -295,6 +326,7 @@
             <li>相関係数は、2つのデータの<span class="highlight">直線的な関係の強さと方向</span>を <code>-1</code> から <code>+1</code> の数値で示す。</li>
             <li>典型的なパターンを覚えた上で、シミュレーターで<span class="highlight">直感的な理解</span>を深めることが重要。</li>
             <li>計算の仕組みは、各データの平均からの<span class="highlight">ズレ（偏差）</span>が基本になっている。</li>
+            <li>計算は複雑だが、Excelの<code>CORREL</code>関数などで<span class="highlight">簡単に実行</span>できる。</li>
             <li>そして最も重要なこと：<span class="highlight">相関関係は因果関係ではない！</span></li>
         </ul>
     </div>
@@ -312,6 +344,7 @@
                 <li>相関係数 $(r)$ の値が <strong>+0.8</strong> を超える状態。</li>
                 <li>相関係数 $(r)$ の値が <strong>-0.8</strong> を下回る状態。</li>
             </ol>
+            <p><strong>【問題】</strong>それぞれどのような点の配置になっていますか？その特徴を観察・考察してみましょう。</p>
             <details>
                 <summary>解答と解説を見る</summary>
                 <div>
@@ -351,7 +384,8 @@
                     <p><strong>【配置の形】</strong>: U字型（二次関数のような形）、円形、あるいは山形などが考えられます。</p>
                     <h4>解説</h4>
                     <p>この結果からわかるのは、「<span class="highlight">相関係数は、あくまで2つの変数の『直線的な関係』の強さしか測れない</span>」という限界です。</p>
-                    <p>U字型のようなハッキリとした関係性（非線形な関係）があっても、右肩上がりや右肩下がりといった「直線的な」傾向はないため、相関係数は0に近い値を示します。データを見る際は、散布図をプロットして<strong>視覚的に関係性を確認</strong>し、相関係数の値だけを鵜呑みにしないことが非常に重要です。</p>
+                    <p>U字型のようなハッキリとした関係性（非線形な関係）があっても、右肩上がりや右肩下がりといった「直線的な」傾向はないため、相関係数は0に近い値を示します。データを見る際は、散布図をプロットして<strong>視覚的に関係性を確認</strong>し、相関係数の値だけを鵜呑みにしないことが非常に重要です。
+                    </p>
                 </div>
             </details>
         </div>
