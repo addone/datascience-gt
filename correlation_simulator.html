@@ -204,13 +204,23 @@
             cursor: pointer;
             color: #2980b9;
         }
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
 
-    <h1>【V3.3.1】データ科学インタラクティブ教材 相関係数</h1>
+    <h1>【V3.4.1】データ科学インタラクティブ教材 相関係数</h1>
 
     <div class="section">
         <h2>1. 相関係数とは？ 📈</h2>
@@ -286,6 +296,7 @@
             <strong>本気解説：</strong><br>
             <ul>
                 <li><a href="https://mathlandscape.com/covariance/" target="_blank">データの共分散の定義と求め方の具体例・性質</a></li>
+                <li><a href="https://www.stat.go.jp/naruhodo/10_tokucho/hukusu.html" target="_blank">相関係数と回帰分析</a></li>
                 <li><a href="https://bellcurve.jp/statistics/course/9591.html" target="_blank">相関係数と無相関検定</a></li>
             </ul>
         </div>
@@ -314,6 +325,11 @@
         <div class="caution">
             <strong>有名な例: 「アイスクリームの売上」と「水難事故の件数」</strong><br>
             この2つには強い正の相関がありますが、「アイスが売れるから水難事故が増える」わけではありません。本当の原因は、両者に影響を与える<strong>「気温」</strong>という隠れた変数（交絡因子）です。
+        </div>
+        <div class="image-container">
+            <img src="img/spurious_correlation.png" alt="相関関係と因果関係の違いのイメージ">
+
+            <p><strong>⬆️ 相関関係と因果関係のイメージ</strong></p>
         </div>
         <p>参考資料：<a href="https://bellcurve.jp/statistics/course/9589.html" target="_blank">相関関係と因果関係</a></p>
     </div>
