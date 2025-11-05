@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推定統計学 基礎演習（点推定・区間推定）V2.1</title>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #004d99;
+            border-bottom: 3px solid #b3d9ff;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        h2 {
+            color: #0066cc;
+            border-left: 5px solid #0066cc;
+            padding-left: 10px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #0077b3;
+            margin-top: 20px;
+        }
+        p, li {
+            line-height: 1.6;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 15px;
+            background-color: #e9f5ff;
+            border-radius: 8px;
+            border: 1px solid #cce5ff;
+        }
+        .simulator {
+            background-color: #f7f9fc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #0099e6;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .input-group button {
+            background-color: #0099e6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .input-group button:hover {
+            background-color: #007acc;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #0066cc;
+            background-color: #ccf2ff;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .data-area {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        #dataOutput {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        #visualizationArea {
+            flex: 2;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .formula {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        .excel-guide li {
+            margin-bottom: 10px;
+            background-color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #ff9900;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>推定統計学 基礎演習：標本から母集団を知る</h1>
+
+    <div class="section">
+        <h2>💡 1. 推定統計学の基本</h2>
+        <p><strong>推定統計学</strong>は、手元の限られたデータ（標本）を用いて、そのデータが抽出された**母集団全体の性質**（例：平均所得 $\mu$）を推測する分野です。</p>
+        <p><strong>重要</strong>: **区間推定**とは、母集団のパラメータが、**ある確率（信頼水準）で含まれる範囲**（信頼区間）を推定することです。シミュレーションで何度も試行し、信頼区間が母平均を捉える「確率」を体感しましょう。 </p>
+        <ul>
+            <li><strong>点推定</strong>: 母集団のパラメータ（$\mu$など）を**一つの値**で推定すること。（例: 標本平均 $\bar{x}$）</li>
+            <li><strong>区間推定</strong>: $\bar{x} \pm Z_{\alpha/2} \times \frac{\sigma}{\sqrt{N}}$ の式で計算される、母平均を捉える**範囲**。</li>
+        </ul>
+    </div>
+
+    <div class="section simulator">
+        <h2>🧪 2. 仮想データを用いたサンプリング・シミュレーター</h2>
+        <p>以下のシミュレーターで、架空の母集団（年間所得）から標本を抽出し、点推定と区間推定を体験しましょう。</p>
+
+        <div class="input-group">
+            <div>
+                <label for="sampleSize">標本サイズ N (例: 30 または 100):</label>
+                <input type="number" id="sampleSize" value="30" min="10">
+            </div>
+            <div>
+                <label for="confidenceLevel">信頼水準 (%) (例: 95 または 99):</label>
+                <input type="number" id="confidenceLevel" value="95" min="80" max="99">
+            </div>
+            <button onclick="runSimulation()">標本を抽出し、推定する</button>
+        </div>
+
+        <div id="results">
+            計算結果がここに表示されます。
+        </div>
+
+        <div class="data-area">
+            <div id="dataOutput">
+                <strong>生成された標本データ（Excel貼り付け用）:</strong><br>
+                <textarea id="sampleDataTextarea" rows="10" cols="20" readonly>ここにデータが生成されます。</textarea>
+            </div>
+            <div id="visualizationArea">
+                <strong>推定結果の可視化：信頼区間と母平均</strong>
+                <canvas id="estimationChart" width="500" height="150"></canvas>
+                <p style="font-size: small;">横軸：所得 (万円)</p>
+            </div>
+        </div>
+
+        <p class="formula">
+            <strong>（仮想母集団の設定）</strong> 母平均 $\mu = 500$ 万円, 母標準偏差 $\sigma = 150$ 万円
+        </p>
+    </div>
+
+
+    <div class="section">
+        <h2>🛠 3. Excel操作ガイド：推定統計の実践</h2>
+        <p>シミュレーターで学んだ手順を、Excelで再現し、計算の仕組みを理解しましょう。</p>
+        
+        <h3>点推定（標本平均の算出）</h3>
+        <p>貼り付けた標本データ（例：A1からA30）に対し、以下の関数で標本平均 $\bar{x}$ を計算します。</p>
+        <div class="formula">
+            <code>=AVERAGE(A1:A30)</code>
+        </div>
+        
+        <h3>標準誤差 (SE) の計算</h3>
+        <p>母標準偏差 $\sigma$ が 150、標本サイズ $N$ が 30 の場合、SEは以下の式で計算されます。</p>
+        <div class="formula">
+            <code>=150 / SQRT(30)</code>
+        </div>
+
+        <h3>区間推定（信頼区間の算出）</h3>
+        <p>Excelの組み込み関数 <code>CONFIDENCE.NORM</code> を使用して、信頼区間の**半分の幅（信頼区間マージン）**を計算します。</p>
+        <ul class="excel-guide">
+            <li>信頼水準 $95\%$ の場合、有意水準 $\alpha$ は $1-0.95 = 0.05$ です。</li>
+            <li><strong>信頼区間の半分の幅 (マージン)</strong>:
+                <div class="formula"><code>=CONFIDENCE.NORM(0.05, 150, 30)</code></div>
+                （引数：有意水準, 母標準偏差, 標本サイズ）
+            </li>
+            <li><strong>信頼区間の下限</strong>: <code>=標本平均 - マージン</code></li>
+            <li><strong>信頼区間の上限</strong>: <code>=標本平均 + マージン</code></li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>🤔 4. 考察課題</h2>
+        <p>シミュレーターを何度も実行し、結果をノートに記録しなさい。特に、<strong>「❌ 母平均を捉えていない」</strong>となるのは、何回に一回かを確認しなさい。</p>
+        <ol>
+            <li>標本サイズ $N$ を小さくすると、グラフの信頼区間を示す**緑色のバーの長さ**はどう変化しますか？それはなぜですか？</li>
+            <li>信頼水準を $99\%$ に上げると、信頼区間の幅はどうなりますか？統計的な「信頼」とは何か、**可視化された結果**を根拠に説明しなさい。</li>
+        </ol>
+    </div>
+
+</div>
+
+<script>
+// Z値の定義
+const Z_VALUES = {
+    90: 1.645,
+    95: 1.960,
+    99: 2.576
+};
+
+// 仮想母集団の設定 (学生には秘密の真の値)
+const MU = 500; // 母平均 (万円)
+const SIGMA = 150; // 母標準偏差 (万円)
+
+function runSimulation() {
+    const N = parseInt(document.getElementById('sampleSize').value);
+    const CL_percent = parseInt(document.getElementById('confidenceLevel').value);
+
+    if (N < 10 || !Z_VALUES[CL_percent]) {
+        alert("標本サイズは10以上、信頼水準は90, 95, 99のいずれかを入力してください。");
+        return;
+    }
+
+    // 1. 標本データの生成 (正規分布からの擬似乱数)
+    const sampleData = [];
+    for (let i = 0; i < N; i++) {
+        let u1 = Math.random();
+        let u2 = Math.random();
+        let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        let value = MU + SIGMA * z;
+        sampleData.push(Math.max(0, parseFloat(value.toFixed(2)))); // 負の所得は0に
+    }
+
+    // 2. 点推定: 標本平均の計算
+    const sum = sampleData.reduce((a, b) => a + b, 0);
+    const mean = sum / N;
+
+    // 3. 区間推定: 標準誤差と信頼区間の計算
+    const Z = Z_VALUES[CL_percent];
+    const SE = SIGMA / Math.sqrt(N);
+    const margin = Z * SE;
+    const lowerBound = mean - margin;
+    const upperBound = mean + margin;
+
+    // 4. 結果の表示
+    const resultsDiv = document.getElementById('results');
+    const caught = (lowerBound <= MU && MU <= upperBound);
+    const caughtText = caught ? "✅ <strong>母平均 (500) を捉えている！</strong>" : "❌ <strong>母平均 (500) を捉えていない。</strong>";
+    const caughtColor = caught ? 'green' : 'red';
+
+    resultsDiv.innerHTML = `
+        <h3>推定結果 (${CL_percent}% 信頼水準, N=${N})</h3>
+        <ul>
+            <li><strong>点推定 (標本平均)</strong>: ${mean.toFixed(2)} 万円</li>
+            <li><strong>標準誤差 (SE)</strong>: ${SE.toFixed(2)}</li>
+            <li><strong>信頼区間の幅 (マージン)</strong>: ${margin.toFixed(2)}</li>
+            <li><strong>信頼区間</strong>: ${lowerBound.toFixed(2)} 〜 ${upperBound.toFixed(2)} 万円</li>
+            <li style="color: ${caughtColor};">${caughtText}</li>
+        </ul>
+    `;
+
+    // 5. 標本データの縦並び表示（Excel練習用）
+    const sampleDataTextarea = document.getElementById('sampleDataTextarea');
+    sampleDataTextarea.value = sampleData.join('\n'); // 改行で縦並び
+
+    // 6. 可視化の実行
+    drawChart(MU, mean, lowerBound, upperBound, caughtColor);
+}
+
+function drawChart(mu, mean, lower, upper, color) {
+    const canvas = document.getElementById('estimationChart');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    // グラフの描画範囲設定 (ここでは [mu - 3*sigma, mu + 3*sigma] あたりを基準)
+    const padding = 50;
+    const minVal = 500 - 3 * 150; // 50万円
+    const maxVal = 500 + 3 * 150; // 950万円
+    const scale = (width - 2 * padding) / (maxVal - minVal);
+
+    const x = (val) => padding + (val - minVal) * scale;
+    const y = (val) => height - padding + val; // Y座標は反転
+
+    // 軸の描画 (中央)
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, height / 2);
+    ctx.lineTo(width - padding, height / 2);
+    ctx.stroke();
+
+    // 軸ラベル (大まかな目盛り)
+    ctx.fillStyle = '#333';
+    ctx.font = '10px Arial';
+    [minVal, 500, maxVal].forEach(val => {
+        ctx.fillText(val.toFixed(0), x(val) - 10, height - 20);
+    });
+
+    // 1. 母平均 MU (赤い線)
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x(mu), 20);
+    ctx.lineTo(x(mu), height - 40);
+    ctx.stroke();
+    ctx.fillText("母平均 $\mu$ (500)", x(mu) + 5, 15);
+
+    // 2. 信頼区間 (緑/赤のバー)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(x(lower), height / 2);
+    ctx.lineTo(x(upper), height / 2);
+    ctx.stroke();
+
+    // 3. 標本平均 (黒い点)
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(x(mean), height / 2, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText(`標本平均 (\\bar{x}) ${mean.toFixed(0)}`, x(mean) - 30, height / 2 - 15);
+
+    ctx.fillText(`${lower.toFixed(0)}`, x(lower), height / 2 + 25);
+    ctx.fillText(`${upper.toFixed(0)}`, x(upper) - 10, height / 2 + 25);
+}
+
+// 初回ロード時にシミュレーションを実行
+window.onload = runSimulation;
+</script>
+
+</body>
+</html>
