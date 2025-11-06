@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中心極限定理シミュレーター（サイコロ）</title>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #38761d;
+            border-bottom: 3px solid #b6d7a8;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        h2 {
+            color: #3d85c6;
+            border-left: 5px solid #3d85c6;
+            padding-left: 10px;
+            margin-top: 30px;
+        }
+        p, li {
+            line-height: 1.6;
+        }
+        .simulator {
+            background-color: #f7f9fc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px dashed #38761d;
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .controls input[type="number"], .controls button {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .controls button {
+            background-color: #38761d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            height: 38px;
+        }
+        .controls button:hover {
+            background-color: #274e13;
+        }
+        #chartArea {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #stats {
+            margin-top: 15px;
+            background-color: #e6ffe6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .formula {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎲 中心極限定理（CLT）の可視化</h1>
+
+    <div class="section">
+        <h2>💡 中心極限定理とは？</h2>
+        <p>中心極限定理とは、<strong>「母集団の分布の形状に関係なく、そこから標本を抽出し、その標本平均を計算するという作業を多数回繰り返すと、その標本平均の分布は正規分布（釣鐘型：$f(x)=\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{x^2}{2\sigma^2}}$）に近づく」</strong>という統計学の根幹となる定理です。</p>
+        <p>このシミュレーションでは、サイコロ（一様分布）を使ってこの原理を体感します。</p>
+        
+        <h3>サイコロの母集団</h3>
+        <ul>
+            <li>サイコロの出目：1, 2, 3, 4, 5, 6</li>
+            <li>母平均 ($\mu$)： $(1+2+3+4+5+6) / 6 = \mathbf{3.5}$</li>
+            <li>母標準偏差 ($\sigma$)： 約 $\mathbf{1.708}$</li>
+        </ul>
+    </div>
+
+    <div class="section simulator">
+        <h2>🧪 シミュレーション設定と実行</h2>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="sampleSize">1. 標本サイズ $N$（1回の試行で振るサイコロの数）：</label>
+                <input type="number" id="sampleSize" value="1" min="1" max="50">
+            </div>
+            <div class="control-group">
+                <label for="numTrials">2. 試行回数（標本平均の計算回数）：</label>
+                <input type="number" id="numTrials" value="1000" min="100" max="10000">
+            </div>
+            <button onclick="runSimulation()">シミュレーションを実行！</button>
+        </div>
+
+        <div id="stats">
+            <strong>集計結果：</strong>
+            <p id="statsOutput">シミュレーションを実行してください。</p>
+        </div>
+
+        <div id="chartArea">
+            <strong>標本平均のヒストグラム</strong>
+            <canvas id="cltChart" width="800" height="300"></canvas>
+            <p style="font-size: small; text-align: center;">横軸: 標本平均 $\bar{x}$ の値 (1.0〜6.0)</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>🔎 結果の考察（インタラクティブな学び）</h2>
+        
+        <ol>
+            <li>**$N=1$ の場合**: サイコロを1回振るだけなので、ヒストグラムは**母集団の分布（一様分布）**と全く同じ形になります。すべての出目が同じくらいの頻度（長方形）になっているか確認しなさい。</li>
+            <li>**$N=2$ の場合**: サイコロを2個振った平均（例: 1と6が出たら3.5）の分布はどうなりますか？平均値3.5付近に**山**ができ始めますか？</li>
+            <li>**$N=30$ の場合**: 標本サイズを30などに増やすと、ヒストグラムの形状は瞬く間に**正規分布（ベル型）**に近づきます。これが中心極限定理の力です。</li>
+            <li>**結論**: 標本サイズ $N$ が大きくなるほど、標本平均の分布は**母集団の分布（サイコロの一様分布）**の形を忘れて、**正規分布**に収束していくことを確認しななさい。</li>
+        </ol>
+    </div>
+
+</div>
+
+<script>
+// 仮想母集団の設定
+const MU = 3.5; 
+const SIGMA = 1.7078; // sqrt((1^2 + ... + 6^2)/6 - 3.5^2)
+
+function runSimulation() {
+    const N = parseInt(document.getElementById('sampleSize').value);
+    const numTrials = parseInt(document.getElementById('numTrials').value);
+    
+    if (N < 1 || numTrials < 100) {
+        alert("設定値を確認してください。標本サイズは1以上、試行回数は100以上に設定してください。");
+        return;
+    }
+
+    const sampleMeans = [];
+    
+    // 試行回数だけシミュレーションを繰り返す
+    for (let i = 0; i < numTrials; i++) {
+        let sumOfDice = 0;
+        // 標本サイズNだけサイコロを振る
+        for (let j = 0; j < N; j++) {
+            // 1から6の整数乱数を生成
+            sumOfDice += Math.floor(Math.random() * 6) + 1;
+        }
+        // 標本平均を計算
+        sampleMeans.push(sumOfDice / N);
+    }
+
+    // 統計量の計算
+    const meanOfMeans = sampleMeans.reduce((a, b) => a + b, 0) / numTrials;
+    const variance = sampleMeans.reduce((a, b) => a + Math.pow(b - meanOfMeans, 2), 0) / numTrials;
+    const stdDevOfMeans = Math.sqrt(variance);
+
+    // 理論値の計算 (CLTより)
+    const theoreticalStdDev = SIGMA / Math.sqrt(N);
+
+    // 統計量の出力
+    document.getElementById('statsOutput').innerHTML = `
+        試行回数: ${numTrials} 回, 標本サイズ: N = ${N}<br>
+        計算された標本平均の平均: ${meanOfMeans.toFixed(3)} (理論値: 3.500)<br>
+        計算された標本平均の標準偏差: ${stdDevOfMeans.toFixed(3)} (理論値: ${theoreticalStdDev.toFixed(3)})
+    `;
+
+    // ヒストグラムの描画
+    drawHistogram(sampleMeans, N);
+}
+
+function drawHistogram(data, N) {
+    const canvas = document.getElementById('cltChart');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const minX = 1.0;
+    const maxX = 6.0;
+    const numBins = 25; // 階級数
+    const binWidth = (maxX - minX) / numBins;
+
+    // 階級にデータを振り分ける (度数分布表の作成)
+    const counts = new Array(numBins).fill(0);
+    let maxCount = 0;
+
+    data.forEach(mean => {
+        if (mean >= minX && mean <= maxX) {
+            let binIndex = Math.floor((mean - minX) / binWidth);
+            if (binIndex === numBins) binIndex = numBins - 1; // 境界の処理
+            counts[binIndex]++;
+            if (counts[binIndex] > maxCount) {
+                maxCount = counts[binIndex];
+            }
+        }
+    });
+
+    const padding = 20;
+    const chartWidth = width - 2 * padding;
+    const chartHeight = height - 2 * padding;
+
+    // グラフ描画
+    ctx.fillStyle = '#6aa84f';
+    ctx.strokeStyle = '#38761d';
+    ctx.lineWidth = 1;
+
+    // 棒グラフの描画
+    for (let i = 0; i < numBins; i++) {
+        const barX = padding + i * (chartWidth / numBins);
+        const barHeight = (counts[i] / maxCount) * chartHeight * 0.95; // 高さの調整
+        const barWidth = chartWidth / numBins;
+
+        ctx.fillRect(barX, chartHeight + padding - barHeight, barWidth - 1, barHeight);
+        ctx.strokeRect(barX, chartHeight + padding - barHeight, barWidth - 1, barHeight);
+    }
+    
+    // X軸の描画
+    ctx.strokeStyle = '#333';
+    ctx.beginPath();
+    ctx.moveTo(padding, chartHeight + padding);
+    ctx.lineTo(width - padding, chartHeight + padding);
+    ctx.stroke();
+
+    // 母平均(3.5)の垂直線 (理論の中心)
+    const muX = padding + (MU - minX) * scaleX(chartWidth);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(muX, padding);
+    ctx.lineTo(muX, chartHeight + padding);
+    ctx.stroke();
+    ctx.fillStyle = 'red';
+    ctx.font = '12px Arial';
+    ctx.fillText("$\mu = 3.5$", muX + 5, padding + 15);
+
+    // X軸目盛りの描画
+    ctx.fillStyle = '#333';
+    ctx.font = '10px Arial';
+    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0].forEach(val => {
+        const xPos = padding + (val - minX) * scaleX(chartWidth);
+        ctx.fillText(val.toFixed(1), xPos - 10, chartHeight + padding + 15);
+    });
+
+    // 補助関数
+    function scaleX(w) {
+        return w / (maxX - minX);
+    }
+}
+
+// 初回実行
+window.onload = runSimulation;
+
+</script>
+
+</body>
+</html>
