@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中心極限定理シミュレーター（サイコロ）</title>
+    <title>中心極限定理シミュレーター（サイコロ）V2.1</title>
     <script>
       MathJax = {
         tex: {
@@ -99,6 +99,14 @@
             padding: 10px;
             border-radius: 5px;
         }
+        canvas {
+            display: block;
+        }
+        .axis-label-x {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 5px;
+        }
         .formula {
             background-color: #fff;
             padding: 10px;
@@ -116,15 +124,10 @@
 
     <div class="section">
         <h2>💡 中心極限定理とは？</h2>
-        <p>中心極限定理とは、<strong>「母集団の分布の形状に関係なく、そこから標本を抽出し、その標本平均を計算するという作業を多数回繰り返すと、その標本平均の分布は正規分布（釣鐘型：$f(x)=\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{x^2}{2\sigma^2}}$）に近づく」</strong>という統計学の根幹となる定理です。</p>
-        <p>このシミュレーションでは、サイコロ（一様分布）を使ってこの原理を体感します。</p>
-        
-        <h3>サイコロの母集団</h3>
-        <ul>
-            <li>サイコロの出目：1, 2, 3, 4, 5, 6</li>
-            <li>母平均 ($\mu$)： $(1+2+3+4+5+6) / 6 = \mathbf{3.5}$</li>
-            <li>母標準偏差 ($\sigma$)： 約 $\mathbf{1.708}$</li>
-        </ul>
+        <p>中心極限定理とは、<strong>「母集団の分布の形状に関係なく、そこから標本を抽出し、その標本平均を計算するという作業を多数回繰り返すと、その標本平均の分布は<a href="https://bellcurve.jp/statistics/course/7797.html" target="_blank">正規分布（ベル型）</a>に近づく」</strong>という統計学の根幹となる定理です。 </p>
+        <p>正規分布の確率密度関数（PDF）：</p>
+        <div class="formula">$f(x)=\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$</div>
+        <p>このシミュレーションでは、サイコロ（一様分布）を使ってこの原理を体感します。サイコロの母平均は $\mathbf{3.5}$ です。</p>
     </div>
 
     <div class="section simulator">
@@ -148,21 +151,21 @@
         </div>
 
         <div id="chartArea">
-            <strong>標本平均のヒストグラム</strong>
+            <strong>標本平均の分布ヒストグラム</strong>
             <canvas id="cltChart" width="800" height="300"></canvas>
-            <p style="font-size: small; text-align: center;">横軸: 標本平均 $\bar{x}$ の値 (1.0〜6.0)</p>
+            <div class="axis-label-x">横軸: 標本平均 $\bar{x}$ の値 (出目)</div>
         </div>
     </div>
     
     <div class="section">
-        <h2>🔎 結果の考察（インタラクティブな学び）</h2>
-        
+        <h2>🔎 結果の考察（学習の深化）</h2>
+        <p>特に<strong>標本サイズ $N$ の値</strong>を変えながら、ヒストグラムの形状の変化を観察しましょう。</p>
         <ol>
-            <li>**$N=1$ の場合**: サイコロを1回振るだけなので、ヒストグラムは**母集団の分布（一様分布）**と全く同じ形になります。すべての出目が同じくらいの頻度（長方形）になっているか確認しなさい。</li>
-            <li>**$N=2$ の場合**: サイコロを2個振った平均（例: 1と6が出たら3.5）の分布はどうなりますか？平均値3.5付近に**山**ができ始めますか？</li>
-            <li>**$N=30$ の場合**: 標本サイズを30などに増やすと、ヒストグラムの形状は瞬く間に**正規分布（ベル型）**に近づきます。これが中心極限定理の力です。</li>
-            <li>**結論**: 標本サイズ $N$ が大きくなるほど、標本平均の分布は**母集団の分布（サイコロの一様分布）**の形を忘れて、**正規分布**に収束していくことを確認しななさい。</li>
+            <li>$N=1$ のヒストグラムは、すべての出目がほぼ同じ高さになる**長方形（一様分布）**になります。</li>
+            <li>$N=20$ 程度に増やすと、ヒストグラムは**母平均 3.5 を中心としたベル型**に収束していきます。</li>
+            <li><strong>ヒストグラムの幅</strong>が、標本サイズ $N$ が大きくなるほど狭まることを確認しなさい。これは<strong>標準誤差 ($\sigma / \sqrt{N}$) が小さくなる</strong>ことを意味します。</li>
         </ol>
+        <p>中心極限定理は、統計的推測の基礎を成す重要な概念です。実際のデータ分析においても、標本平均が正規分布に近づく性質を利用して、信頼区間の設定や仮説検定が行われます。（解説資料：<a href="https://bellcurve.jp/statistics/course/8543.html" target="_blank">[1]</a> <a href="https://bellcurve.jp/statistics/course/8545.html" target="_blank">[2]</a>）</p>
     </div>
 
 </div>
@@ -170,7 +173,7 @@
 <script>
 // 仮想母集団の設定
 const MU = 3.5; 
-const SIGMA = 1.7078; // sqrt((1^2 + ... + 6^2)/6 - 3.5^2)
+const SIGMA = 1.7078; // 母標準偏差 (サイコロ)
 
 function runSimulation() {
     const N = parseInt(document.getElementById('sampleSize').value);
@@ -183,15 +186,11 @@ function runSimulation() {
 
     const sampleMeans = [];
     
-    // 試行回数だけシミュレーションを繰り返す
     for (let i = 0; i < numTrials; i++) {
         let sumOfDice = 0;
-        // 標本サイズNだけサイコロを振る
         for (let j = 0; j < N; j++) {
-            // 1から6の整数乱数を生成
-            sumOfDice += Math.floor(Math.random() * 6) + 1;
+            sumOfDice += Math.floor(Math.random() * 6) + 1; // 1〜6
         }
-        // 標本平均を計算
         sampleMeans.push(sumOfDice / N);
     }
 
@@ -211,10 +210,10 @@ function runSimulation() {
     `;
 
     // ヒストグラムの描画
-    drawHistogram(sampleMeans, N);
+    drawHistogram(sampleMeans, N, numTrials);
 }
 
-function drawHistogram(data, N) {
+function drawHistogram(data, N, numTrials) {
     const canvas = document.getElementById('cltChart');
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
@@ -223,17 +222,20 @@ function drawHistogram(data, N) {
 
     const minX = 1.0;
     const maxX = 6.0;
-    const numBins = 25; // 階級数
+    const numBins = 25; 
     const binWidth = (maxX - minX) / numBins;
+    const padding = 50; // 軸ラベルのためにパディングを増やす
+    const chartWidth = width - 2 * padding;
+    const chartHeight = height - 2 * padding;
 
-    // 階級にデータを振り分ける (度数分布表の作成)
+    // 階級にデータを振り分ける
     const counts = new Array(numBins).fill(0);
     let maxCount = 0;
 
     data.forEach(mean => {
         if (mean >= minX && mean <= maxX) {
             let binIndex = Math.floor((mean - minX) / binWidth);
-            if (binIndex === numBins) binIndex = numBins - 1; // 境界の処理
+            if (binIndex === numBins) binIndex = numBins - 1;
             counts[binIndex]++;
             if (counts[binIndex] > maxCount) {
                 maxCount = counts[binIndex];
@@ -241,34 +243,53 @@ function drawHistogram(data, N) {
         }
     });
 
-    const padding = 20;
-    const chartWidth = width - 2 * padding;
-    const chartHeight = height - 2 * padding;
+    // X軸（横軸）の描画
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, chartHeight + padding);
+    ctx.lineTo(width - padding, chartHeight + padding);
+    ctx.stroke();
 
-    // グラフ描画
+    // Y軸（縦軸）の描画
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, chartHeight + padding);
+    ctx.stroke();
+
+    // グラフ描画（棒グラフ）
     ctx.fillStyle = '#6aa84f';
     ctx.strokeStyle = '#38761d';
     ctx.lineWidth = 1;
 
-    // 棒グラフの描画
     for (let i = 0; i < numBins; i++) {
         const barX = padding + i * (chartWidth / numBins);
-        const barHeight = (counts[i] / maxCount) * chartHeight * 0.95; // 高さの調整
+        const barHeight = (counts[i] / maxCount) * chartHeight * 0.95; 
         const barWidth = chartWidth / numBins;
 
         ctx.fillRect(barX, chartHeight + padding - barHeight, barWidth - 1, barHeight);
         ctx.strokeRect(barX, chartHeight + padding - barHeight, barWidth - 1, barHeight);
     }
     
-    // X軸の描画
-    ctx.strokeStyle = '#333';
-    ctx.beginPath();
-    ctx.moveTo(padding, chartHeight + padding);
-    ctx.lineTo(width - padding, chartHeight + padding);
-    ctx.stroke();
+    // Y軸ラベル（縦軸）
+    ctx.save(); // 現在の状態を保存
+    ctx.translate(padding / 2, height / 2); // 原点を移動
+    ctx.rotate(-Math.PI / 2); // 90度回転
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 12px Arial';
+    ctx.fillText("度数（頻度）", 0, 0);
+    ctx.restore(); // 状態を元に戻す
+
+    // Y軸目盛り
+    ctx.font = '10px Arial';
+    ctx.fillText(`${maxCount}`, padding - 30, padding + 5);
+    ctx.fillText(`0`, padding - 15, chartHeight + padding + 5);
+
 
     // 母平均(3.5)の垂直線 (理論の中心)
-    const muX = padding + (MU - minX) * scaleX(chartWidth);
+    const scaleX = chartWidth / (maxX - minX);
+    const muX = padding + (MU - minX) * scaleX;
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -277,20 +298,15 @@ function drawHistogram(data, N) {
     ctx.stroke();
     ctx.fillStyle = 'red';
     ctx.font = '12px Arial';
-    ctx.fillText("$\mu = 3.5$", muX + 5, padding + 15);
+    ctx.fillText("母平均 =3.5", muX + 5, padding + 15);
 
     // X軸目盛りの描画
     ctx.fillStyle = '#333';
     ctx.font = '10px Arial';
     [1.0, 2.0, 3.0, 4.0, 5.0, 6.0].forEach(val => {
-        const xPos = padding + (val - minX) * scaleX(chartWidth);
+        const xPos = padding + (val - minX) * scaleX;
         ctx.fillText(val.toFixed(1), xPos - 10, chartHeight + padding + 15);
     });
-
-    // 補助関数
-    function scaleX(w) {
-        return w / (maxX - minX);
-    }
 }
 
 // 初回実行
