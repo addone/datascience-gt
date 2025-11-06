@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>推定統計学 基礎演習（点推定・区間推定）V2.1</title>
+    <title>推定統計学 基礎演習（点推定・区間推定）V2.2</title>
     <script>
       MathJax = {
         tex: {
@@ -146,11 +146,11 @@
 
     <div class="section">
         <h2>💡 1. 推定統計学の基本</h2>
-        <p><strong>推定統計学</strong>は、手元の限られたデータ（標本）を用いて、そのデータが抽出された**母集団全体の性質**（例：平均所得 $\mu$）を推測する分野です。</p>
-        <p><strong>重要</strong>: **区間推定**とは、母集団のパラメータが、**ある確率（信頼水準）で含まれる範囲**（信頼区間）を推定することです。シミュレーションで何度も試行し、信頼区間が母平均を捉える「確率」を体感しましょう。 </p>
+        <p><strong>推定統計学</strong>は、手元の限られたデータ（標本）を用いて、そのデータが抽出された<strong>母集団全体の性質</strong>（例：平均所得 $\mu$）を推測する分野です。</p>
+        <p><strong>重要</strong>: <strong>区間推定</strong>とは、母集団のパラメータが、<strong>ある確率（信頼水準）で含まれる範囲</strong>（信頼区間）を推定することです。シミュレーションで何度も試行し、信頼区間が母平均を捉える「確率」を体感しましょう。 </p>
         <ul>
-            <li><strong>点推定</strong>: 母集団のパラメータ（$\mu$など）を**一つの値**で推定すること。（例: 標本平均 $\bar{x}$）</li>
-            <li><strong>区間推定</strong>: $\bar{x} \pm Z_{\alpha/2} \times \frac{\sigma}{\sqrt{N}}$ の式で計算される、母平均を捉える**範囲**。</li>
+            <li><strong>点推定</strong>: 母集団のパラメータ（$\mu$など）を<strong>一つの値</strong>で推定すること。（例: 標本平均 $\bar{x}$）</li>
+            <li><strong>区間推定</strong>: $\bar{x} \pm Z_{\alpha/2} \times \frac{\sigma}{\sqrt{N}}$ の式で計算される、母平均を捉える<strong>範囲</strong>。</li>
         </ul>
     </div>
 
@@ -201,15 +201,30 @@
         <div class="formula">
             <code>=AVERAGE(A1:A30)</code>
         </div>
+
+        <h3>標本の標準偏差の計算</h3>
+        <p>貼り付けた標本データ（例：A1からA30）に対し、以下の関数で標本の標準偏差 $s$ を計算します。</p>
+        <div class="formula">
+            <code>=STDEV.S(A1:A30)</code>
+        </div>
         
         <h3>標準誤差 (SE) の計算</h3>
-        <p>母標準偏差 $\sigma$ が 150、標本サイズ $N$ が 30 の場合、SEは以下の式で計算されます。</p>
+        <p>点推定を行う際に、推定量のバラつき（＝精度）を標準誤差（SE：standard error）で捉えられます。標準誤差は、一般的に<strong>「標本平均の標準偏差」</strong>を意味します。</p>
+        <p>標本の標準偏差 $s$ （例：計算結果をE3に保存された場合）から算出、標本サイズ $N$ が 30 の場合、SEは以下の式で計算されます。</p>
+        <div class="formula">
+            <code>=E3 / SQRT(30)</code>
+        </div>
+        <p>母標準偏差 $\sigma$ が既知（150）、標本サイズ $N$ が 30 の場合、SEは以下の式で計算されます。</p>
         <div class="formula">
             <code>=150 / SQRT(30)</code>
         </div>
+        <p>参考資料：<a href="https://bellcurve.jp/statistics/course/8616.html" target="_blank">標準偏差と標準誤差</a></p>
+
 
         <h3>区間推定（信頼区間の算出）</h3>
         <p>Excelの組み込み関数 <code>CONFIDENCE.NORM</code> を使用して、信頼区間の**半分の幅（信頼区間マージン）**を計算します。</p>
+        <p>（注意）標本サイズが小さい場合（$N<30$）、母標準偏差が不明であれば、t分布を用いた推定が必要です。
+        </p>
         <ul class="excel-guide">
             <li>信頼水準 $95\%$ の場合、有意水準 $\alpha$ は $1-0.95 = 0.05$ です。</li>
             <li><strong>信頼区間の半分の幅 (マージン)</strong>:
@@ -284,9 +299,9 @@ function runSimulation() {
         <h3>推定結果 (${CL_percent}% 信頼水準, N=${N})</h3>
         <ul>
             <li><strong>点推定 (標本平均)</strong>: ${mean.toFixed(2)} 万円</li>
-            <li><strong>標準誤差 (SE)</strong>: ${SE.toFixed(2)}</li>
+            <li><strong>標準誤差 (SE、母標準偏差から算出)</strong>: ${SE.toFixed(2)}</li>
             <li><strong>信頼区間の幅 (マージン)</strong>: ${margin.toFixed(2)}</li>
-            <li><strong>信頼区間</strong>: ${lowerBound.toFixed(2)} 〜 ${upperBound.toFixed(2)} 万円</li>
+            <li><strong>信頼区間(下限〜上限)</strong>: ${lowerBound.toFixed(2)} 〜 ${upperBound.toFixed(2)} 万円</li>
             <li style="color: ${caughtColor};">${caughtText}</li>
         </ul>
     `;
