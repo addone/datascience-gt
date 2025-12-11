@@ -2,18 +2,42 @@
 
 ## KNNによるデータ2分類
 
-文字をエンコードする：
+散布図作成：
 
-![](./img_ans/ml_practice1_ans1-1.png)
+![](./img_ans/ml_classification_ans1-1.png)
 
-文字としてデコードする：
+モデル学習と評価：
 
-![](./img_ans/ml_practice1_ans1-2.png)
+![](./img_ans/ml_classification_ans1-2.png)
 
-## 文字列の基本操作
+可視化：
 
-![](./img_ans/ml_practice1_ans2.png)
+![](./img_ans/ml_classification_ans1-3.png)
 
-## 観光案内システム
+## SVMによる手書き数字の認識
 
-![](./img_ans/ml_practice1_ans3.png)
+![](./img_ans/ml_classification_ans2-1.png)
+
+![](./img_ans/ml_classification_ans2-2.png)
+
+## NNによる画像認識
+
+ラベル設定：
+
+![](./img_ans/ml_classification_ans3-1.png)
+
+画像データを確認：
+
+![](./img_ans/ml_classification_ans3-2.png)
+
+3層モデルを構築：
+
+![](./img_ans/ml_classification_ans3-3.png)
+
+モデルの学習：
+
+![](./img_ans/ml_classification_ans3-4.png)
+
+モデルを用いた予測と結果表示：
+
+![](./img_ans/ml_classification_ans3-5.png)
