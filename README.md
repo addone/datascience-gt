@@ -1,0 +1,1 @@
+**datascience-gt** is a collection of data science learning materials designed for tourism and humanities contexts. It includes hands-on Jupyter notebooks, detailed answer guides, and interactive HTML simulators covering statistics, data analysis, and machine learning topics such as classification and time-series prediction.
