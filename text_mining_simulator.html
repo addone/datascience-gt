@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テキストマイニングの仕組みを理解しよう</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #f97316;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --card-bg: #ffffff;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+        }
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        /* ヘッダー */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 1.8em; }
+        header p { margin-top: 10px; opacity: 0.9; }
+
+        /* カード（解説・ツール部分） */
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary);
+        }
+        .card.interactive {
+            border-left-color: var(--secondary);
+            background-color: #fffaf0; /* 少し色を変えて実践パートだと分かるように */
+        }
+
+        h2 { border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; color: #111827; }
+        h3 { color: var(--primary); margin-top: 20px; }
+        
+        .highlight {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* ツールUI */
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus { border-color: var(--secondary); outline: none; }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.1s, background 0.3s;
+            box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
+        }
+        .btn:hover { background-color: #ea580c; transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+
+        /* 結果表示エリア */
+        #result-area { display: none; animation: fadeIn 0.5s ease-out; }
+        
+        /* 単語チップ */
+        #token-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            min-height: 60px;
+        }
+        .token {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        .token.noun { border-color: var(--primary); color: var(--primary); font-weight: bold; background: #eff6ff; }
+        .token.ignore { opacity: 0.5; background: #e5e7eb; border-color: transparent; text-decoration: line-through; color: #9ca3af; }
+
+        /* テーブルとグラフのレイアウト */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) { .analysis-grid { grid-template-columns: 1fr; } }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        th { background: #f3f4f6; font-size: 0.9em; }
+        tr:first-child td { font-weight: bold; color: var(--secondary); }
+
+        @keyframes popIn { to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .tip-box {
+            background-color: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header>
+        <h1>テキストマイニング入門 ⛏️</h1>
+        <p>「言葉の山」から「宝（価値ある情報）」を掘り出す技術</p>
+    </header>
+
+    <div class="card">
+        <h2>1. なぜテキストマイニングが必要？</h2>
+        <p>観光地には、SNSの投稿、アンケートの自由記述、予約サイトの口コミなど、膨大な「文章データ」が溢れています。</p>
+        <p>これらを人間が全て読むのは不可能です。そこで、コンピュータを使って文章を分析し、<strong>「みんなが何に関心を持っているか」</strong>を自動で集計する技術が必要になります。</p>
+    </div>
+
+    <div class="card interactive">
+        <h2>2. 【実験】 コンピュータに文章を読ませてみよう</h2>
+        <p>以下のボックスに分析したい文章を入力してください。（初期値としてサンプルの観光レビューが入っています）</p>
+        <textarea id="inputText" placeholder="ここに分析したい文章を入力...">京都の寺院はとても静かで心が落ち着きました。特に金閣寺の輝きは素晴らしいです。抹茶のスイーツが美味しくて、清水寺の坂道で食べた八ッ橋も最高でした。バスは混んでいましたが、運転手さんは親切でした。</textarea>
+        <button class="btn" onclick="startAnalysis()">分析スタート 🚀</button>
+    </div>
+
+    <div id="result-area">
+        <div class="card">
+            <h2>3. 仕組み①：形態素解析（けいたいそかいせき）</h2>
+            <p>私たち人間は「京都の寺院」を見れば、「京都 / の / 寺院」という意味の区切りが自然にわかります。しかし、コンピュータにはただの文字の羅列にしか見えません。</p>
+            <p>そこで、辞書を使って文章を最小単位（単語）にバラバラにする処理を行います。これを<span class="highlight">形態素解析</span>と呼びます。</p>
+            
+            <h3>実際の分解結果</h3>
+            <p>※分析に重要な「名詞」などは青色、意味の薄い「助詞（て、に、を、は）」などはグレーで表示しています。</p>
+            <div id="token-box"></div>
+
+            <div class="tip-box">
+                <strong>💡 ポイント：ストップワード（不要語）</strong><br>
+                「の」「は」「です」などは、どんな文章にも頻繁に出てくるため、分析の邪魔になります。これらを意図的に無視することを「ストップワードの除去」と呼びます。
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>4. 仕組み②：定量化（言葉を数える）</h2>
+            <p>バラバラにした単語を数え上げることで、<strong>「どの言葉が重要なのか」</strong>を数値（ランキング）で見ることができます。</p>
+            
+            <div class="analysis-grid">
+                <div>
+                    <h3>📊 出現回数ランキング</h3>
+                    <table id="ranking-table">
+                        <thead><tr><th>順位</th><th>単語</th><th>回数</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3>📈 グラフによる可視化</h3>
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+            
+            <p style="margin-top:20px;">
+                この結果を見ることで、「京都」という全体テーマの中で、特に<strong>「寺院」「金閣寺」「抹茶」</strong>などが話題の中心であることが一目でわかります。（←ほとんどの場合はそんな良い結果が出ない。）
+            </p>
+        </div>
+
+        <div class="card interactive">
+            <h2>🎯 次のステップ：自分の言葉で試そう</h2>
+            <p>ページ上部の入力ボックスに戻り、以下の文章をコピー＆ペーストして、結果がどう変わるか試してみましょう。</p>
+            <ul>
+                <li>自分が最近行った旅行の感想</li>
+                <li>好きなアニメや映画のあらすじ</li>
+                <li>今日のニュース記事の一部</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ブラウザの日本語解析機能（Intl.Segmenter）を使用
+    // ※外部辞書なしで動作する最新のWeb標準機能です
+    const segmenter = new Intl.Segmenter('ja', { granularity: 'word' });
+
+    // ストップワード（分析から除外する単語）のリスト
+    const STOP_WORDS = new Set([
+        'の', 'は', 'が', 'で', 'に', 'を', 'と', 'て', 'た', 'も', 'し', 'ます', 'です', 
+        'こと', 'もの', 'さん', 'よう', 'ため', 'それ', 'これ', 'あれ',
+        '。', '、', '・', '！', '？', '\n', ' ', '　'
+    ]);
+
+    let chartInstance = null;
+
+    function startAnalysis() {
+        const text = document.getElementById('inputText').value;
+        if (!text.trim()) {
+            alert("文章を入力してください！");
+            return;
+        }
+
+        // 結果エリアを表示
+        document.getElementById('result-area').style.display = 'block';
+        
+        // 1. 形態素解析とHTML生成
+        const tokenBox = document.getElementById('token-box');
+        tokenBox.innerHTML = ''; // クリア
+        
+        const segments = segmenter.segment(text);
+        const counts = {};
+        let delay = 0;
+
+        for (const seg of segments) {
+            const word = seg.segment;
+            const isStopWord = STOP_WORDS.has(word) || word.length < 1; // 1文字未満やストップワード
+
+            // 1. 【計算】はすぐにやる（ここをsetTimeoutの外に出しました！）
+            if (!isStopWord) {
+                counts[word] = (counts[word] || 0) + 1;
+            }
+
+            // HTML要素作成（アニメーション用）
+            setTimeout(() => {
+                const span = document.createElement('span');
+                span.textContent = word;
+                
+                if (isStopWord) {
+                    span.className = 'token ignore';
+                } else {
+                    span.className = 'token noun'; // 簡易的に全てnoun扱い（強調用）
+                }
+                tokenBox.appendChild(span);
+            }, delay);
+            delay += 30; // 30msごとに表示
+        }
+
+        // 2. 集計とランキング
+        // オブジェクトを配列に変換してソート
+        const sortedWords = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8); // 上位8件のみ
+
+        // テーブル更新
+        const tbody = document.querySelector('#ranking-table tbody');
+        tbody.innerHTML = '';
+        sortedWords.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${index + 1}位</td><td>${item[0]}</td><td>${item[1]}回</td>`;
+            tbody.appendChild(tr);
+        });
+
+        // 3. グラフ更新
+        updateChart(sortedWords);
+
+        // スクロール（結果が見えるように）
+        setTimeout(() => {
+            document.getElementById('result-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+
+    function updateChart(data) {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d[0]),
+                datasets: [{
+                    label: '出現回数',
+                    data: data.map(d => d[1]),
+                    backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
