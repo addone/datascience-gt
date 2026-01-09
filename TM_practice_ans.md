@@ -1,5 +1,9 @@
 # テキストマイニング練習解答（参考用）
 
+<a href="https://colab.research.google.com/github/addone/datascience-gt/blob/main/TM_practice.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+↑のボタンでノートブックを開き、「ファイル」メニューから自分のドライブにコピーしてから、実行してください。
+
 ## 形態素解析体験
 
 ![](./img_ans/tm_practice_step1.png)
