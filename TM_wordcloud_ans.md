@@ -1,4 +1,4 @@
-# テキストマイニング練習解答（参考用）
+# ワードクラウド演習課題解答（参考用）
 
 <a href="https://colab.research.google.com/github/addone/datascience-gt/blob/main/TM_wordcloud_practice.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
