@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アクティブ・ラーニング演習：デジタル技術を活用した質的調査法</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #0d9488;
+            --accent-color: #ea580c;
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            margin-bottom: 25px;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .intro-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card.accent { border-top-color: var(--accent-color); }
+        .card.secondary { border-top-color: var(--secondary-color); }
+        .card.highlight { border-top-color: #6366f1; }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.15rem;
+            margin-top: 20px;
+        }
+
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+
+        /* テーブル装飾 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        th { background-color: #f1f5f9; color: var(--primary-color); }
+
+        /* インタラクティブ要素 */
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .todo-item:hover { background: #e2e8f0; }
+        .todo-item input { margin-right: 12px; margin-top: 6px; transform: scale(1.2); }
+        .todo-item.checked { background: #d1fae5; color: #065f46; text-decoration: line-through; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #e2e8f0;
+            color: #475569;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 6px;
+            margin-bottom: 10px;
+        }
+        .badge.target { background-color: #dbeafe; color: #1e40af; }
+        .badge.step { background-color: #fef3c7; color: #b45309; }
+
+        /* ミニクレンジングシミュレーター */
+        .simulator-box {
+            background: #fafafa;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        .score-display {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-top: 10px;
+        }
+
+        blockquote {
+            background: #fff7ed;
+            border-left: 4px solid var(--accent-color);
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        /* ワークシート用テキストエリア */
+        .worksheet-container {
+            background: #f8fafc;
+            border: 2px dashed #94a3b8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            user-select: all; /* クリックで全選択されやすくする */
+            -webkit-user-select: all;
+        }
+        .copy-hint {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper container">
+    <header>
+        <span class="badge target">観光学科1年生向けデータ科学基礎演習</span>
+        <h1>デジタル技術で挑む「問い」と「データ」の交差点</h1>
+        <p>半構造化インタビューとデータ前処理の実践</p>
+    </header>
+
+    <div class="intro-grid">
+        <!-- 導入文 -->
+        <div class="card">
+            <h2>🧭 なぜこの演習を行うのか？</h2>
+            <p>観光地開発や社会調査において、アンケートの数字だけでは見えてこない「人間のリアルな心理や行動の動機」を知ることは極めて重要です。その強力な武器となるのが主要な質的調査法の１つである<strong>「インタビュー」</strong>です。</p>
+            <p>本演習では、あらかじめ骨組みを用意しつつも相手の話に合わせて柔軟に深掘りする「半構造化インタビュー」の手法を学びます。さらに、現代のデータサイエンスに不可欠な「音声の自動テキスト化」と「データ前処理（クレンジング）」の一連のプロセスをデジタル環境で体感します。</p>
+        </div>
+
+        <!-- 学習目標 -->
+        <div class="card secondary">
+            <h2>🎯 到達目標</h2>
+            <ul>
+                <li>雑談と調査インタビューの違いを説明できる</li>
+                <li>相手の回答に応じて臨機応変な深掘りができる</li>
+                <li>AIの認識エラー（ノイズ）を手動で修正できる</li>
+                <li>データに基づき自身の見解を論理的に記述できる</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card secondary">
+        <h2>💡 そもそも「半構造化インタビュー」ってなに？</h2>
+        <p>アンケートの数字だけでは見えてこない「人間のリアルな心理や行動の動機」を知るための強力な武器がインタビュー調査です。インタビューには、大きく分けて3つのグラデーションがあります。今回挑戦するのは<strong>「2. 半構造化インタビュー」</strong>です。</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>手法</th>
+                    <th>特徴</th>
+                    <th>イメージ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1. 構造化</strong></td>
+                    <td>決まった質問を、決まった順番で、全員に全く同じように聞く。</td>
+                    <td>アンケートの読み上げ、入国審査</td>
+                </tr>
+                <tr>
+                    <td><strong>2. 半構造化</strong></td>
+                    <td><strong>大まかな質問は用意するが、相手の答えに応じて順番を変えたり、話を深掘りしたりする。</strong></td>
+                    <td><strong>じっくり聴くラジオ番組のゲストトーク</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>3. 非構造化</strong></td>
+                    <td>テーマだけ決めて、あとは相手の自由に話してもらう。</td>
+                    <td>居酒屋でのディープな雑談</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>半構造化は、事前に聞きたい軸がブレないため比較分析がしやすく、かつ相手がポロッと言った「面白いエピソード」をその場で突っ込んで掘り下げることができる、いいとこ取りの手法です。</p>
+    </div>
+
+    <div class="card">
+        <span class="badge step">Step 1</span>
+        <h2>調査設計：インタビューガイドの作成</h2>
+        <p>まずは<strong>意見が分かれそうなテーマ</strong>（例：伝統文化の商業化、民泊の是非、SNS映えの功罪など）を決めてください。</p>
+
+        <blockquote>
+            <strong>💡 テーマ選びの重要性：</strong><br>
+            <ul>
+                <li>全員が「Yes」か「No」で答えるようなテーマ（例：「観光地のゴミは拾うべきか？」）では、インタビューをするまでもなく結論が決まっており、調査としての価値が低くなります。</li>
+                <li>意見が分かれそうなもの（賛否両論あるもの、多様な選択肢や価値観が存在するもの）を選ぶことで、「そう考えるようになった具体的なきっかけは何ですか？」「どのようなメリット・デメリットを重視していますか？」といった、相手の背景や文脈を臨機応変に深掘りする必要性があり、インタビューの中で新しい発見や深い洞察が生まれやすくなります。</li>
+                <li>相反する意見や異なる価値観のテキストデータを集めることで、「自分の意見とは異なる立場の人にも、それなりの正当な論理や背景がある」ということに気づくことで、物事を多角的に捉え、自らの見解を論理的に組み立てる力（批判的思考力）を養うトレーニングになります。</li>
+            </ul>
+        </blockquote>
+
+        <h3>📋 事前準備チェックリスト（クリックしてチェック）</h3>
+        <div class="todo-item" onclick="toggleTodo(this)"><input type="checkbox"> <span><strong>メイン質問の用意：</strong> 相手に必ず聞きたい大きな問いを3〜4個書き出した。</span></div>
+        <div class="todo-item" onclick="toggleTodo(this)"><input type="checkbox"> <span><strong>サブ質問（プロンプト）の用意：</strong> 「例えば？」と促すための具体例の選択肢を用意した。</span></div>
+        <div class="todo-item" onclick="toggleTodo(this)"><input type="checkbox"> <span><strong>音声認識ソフトの起動：</strong> （Microsoft Wordの場合）白紙の文書を開き、「ディクテーション（音声入力）」ボタンの位置を確認した。（スマホのメモアプリの場合）スマホの音声入力がすぐに使える状態にした。</span></div>
+    </div>
+
+    <div class="card accent">
+        <span class="badge step">Step 2</span>
+        <h2>グループ内での予行演習（練習）</h2>
+        <p>いきなり本番に挑む前に、まずは同じグループのメンバー同士でペアを組み、練習を行います。目的は<strong>「Wordの音声入力に慣れること」</strong>と<strong>「相手の話を深掘りする感覚を掴むこと」</strong>です。</p>
+        <p>練習では身近なテーマである<strong>「なぜそのスマホ（または主要アプリ）を選び、使い続けているのか？」</strong>について探りましょう。</p>
+        
+        <ul>
+            <li>インタビュアー役と語り手役を交代で担当します（各5分程度）。</li>
+            <li>パソコンを二人の真ん中に置き、Wordまたはスマホの音声入力をONにしてください。</li>
+        </ul>
+
+        <blockquote>
+            <strong>💡 深掘り（プロービング）の極意：</strong><br>
+            相手が「リール動画を夜遅くまで見ちゃう」と言ったら、すかさず「夜遅くとは、具体的に何時くらいですか？」「見終わった後はどんな気持ちですか？」と突っ込んでみましょう。これが「半構造化」の真髄です。
+        </blockquote>
+    </div>
+
+    <div class="card highlight">
+        <span class="badge step">Step 3</span>
+        <h2>本番調査：グループ外の学生へのインタビュー</h2>
+        <p>練習で感覚を掴んだら、いよいよ本番です。<strong>自分たちのグループ以外の学生を複数名</strong>見つけて、インタビューへの協力を依頼しましょう。</p>
+        
+        <ul>
+            <li><strong>多様なデータを集める：</strong> 異なる価値観や背景を持つ人に聞くことで、データに深みが出ます。</li>
+            <li><strong>記録の徹底：</strong> ここでもWordまたはスマホの音声入力をフル活用し、複数人分のテキストデータをしっかりと収集してください。</li>
+            <li><strong>沈黙を恐れない：</strong> 初対面に近い相手が黙った時は、頭の中で言葉を探しているサインです。5秒間は急かさずに待ちましょう。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <span class="badge step">Step 4</span>
+        <h2>データクレンジング（前処理シミュレーター）</h2>
+        <p>AIが起こしたテキストには、必ず「えっと」「あー」といった無駄な言葉（フィーラ）や、おかしな漢字変換が含まれます。これを綺麗に整える作業を<strong>データクレンジング</strong>と呼びます。本番データに向き合う前に、ここで感覚を掴んでおきましょう。</p>
+        
+        <div class="simulator-box">
+            <h3>🛠️ 練習してみよう！</h3>
+            <p>以下のテキストボックス内の文章を編集して、「えーと」「その」「文字の間違い」を消して、読みやすい綺麗な日本語に修正してください。</p>
+            <textarea id="cleaningArea" oninput="checkCleansing()">えーと、私が京都を旅行した時に、その、金閣寺がすっごく輝いてて、マジで感動したというか、うん、あそこは絶対いくべきだと思います。</textarea>
+            <div id="score" class="score-display">ノイズを削除して、テキストを修正してください。</div>
+        </div>
+    </div>
+
+    <div class="card secondary">
+        <h2>📝 レポート提出用ワークシート</h2>
+        <p>以下の枠内のテキストを<strong>すべて選択してコピーし、ご自身のWordに貼り付けて（「テキストのみ保持」を選択）</strong>、各項目を記入してから提出してください。</p>
+        
+        <span class="copy-hint">※下の枠内をクリックして全選択、「Ctrl+C (Win) / Cmd+C (Mac)」でコピーできます。</span>
+        <div class="worksheet-container">【半構造化インタビュー 演習ワークシート】
+
+■ 学籍番号・氏名：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+■ テーマ：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+■ インタビュー人数（本番）：＿＿名
+
+① 事前に準備したメイン質問（3〜4個）
+1. 
+2. 
+3. 
+4. 
+
+② インタビューのテキストデータ（クレンジング済み）
+※Wordの音声入力で収集し、ノイズを取り除いた「最も印象的だった1名分」の会話テキストを以下に貼り付けてください。
+
+[ここに会話テキストを貼り付け]
+
+
+③ 相手の話を「深掘り」して新しく見えてきたこと
+（※「なぜ？」「具体的には？」と突っ込んで聞いて、初めて分かった本音やエピソードを記述してください）
+[回答エリア]
+
+
+④ インタビューとデータ収集を終えての考察（200字程度）
+（※一連の発言データから、対象者にとってそのテーマはどのような意味を持っていると考えられますか？あなた自身の分析を論理的に記述してください）
+[回答エリア]
+</div>
+    </div>
+</div>
+
+<script>
+    function toggleTodo(element) {
+        element.classList.toggle('checked');
+        const checkbox = element.querySelector('input');
+        checkbox.checked = !checkbox.checked;
+    }
+
+    function checkCleansing() {
+        const text = document.getElementById('cleaningArea').value;
+        const scoreDiv = document.getElementById('score');
+        
+        // 簡単な評価ロジック
+        const noiseCount = (text.match(/えーと|その|マジで|うん/g) || []).length;
+        
+        if (text.includes('京都') && text.includes('金閣寺') && noiseCount === 0) {
+            scoreDiv.innerHTML = "✨ 素晴らしい！ノイズが綺麗に除去され、洗練された分析用データになりました！";
+            scoreDiv.style.color = "#059669";
+        } else if (noiseCount > 0) {
+            scoreDiv.innerHTML = "⏳ まだ口語特有のノイズ（えーと、その、など）が " + noiseCount + " 箇所残っています。修正してみましょう。";
+            scoreDiv.style.color = "#ea580c";
+        } else {
+            scoreDiv.innerHTML = "必要なキーワード（京都、金閣寺など）まで消えていないか確認してください。";
+            scoreDiv.style.color = "#475569";
+        }
+    }
+</script>
+
+</body>
+</html>
