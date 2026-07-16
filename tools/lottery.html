@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教育用・発表者抽選ツール (V2)</title>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #0d9488;
+            --accent-color: #f59e0b;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        header p {
+            color: #64748b;
+            margin: 5px 0 0 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 25px;
+            box-sizing: border-box;
+        }
+
+        .left-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .stats {
+            font-size: 0.95rem;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid var(--secondary-color);
+            margin-top: 5px;
+        }
+
+        /* 手動選択エリアのボタンリスト */
+        .manual-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .manual-btn {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .manual-btn:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        /* 右側：メイン抽選エリア */
+        .lottery-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 450px;
+        }
+
+        .display-box {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            color: #ffffff;
+            border-radius: 16px;
+            font-size: 3rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.6);
+            margin-bottom: 25px;
+            transition: all 0.3s;
+            overflow: hidden;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .display-box.winner {
+            background: linear-gradient(145deg, #0d9488, #115e59);
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        .display-box.manual-selected {
+            background: linear-gradient(145deg, #d97706, #92400e);
+            animation: pulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.02); }
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .history-section {
+            width: 100%;
+            max-width: 1100px;
+            margin-top: 20px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .history-item {
+            background: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .history-item .num {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-right: 4px;
+        }
+
+        .history-item.manual-badge {
+            border: 2px solid var(--accent-color);
+            background: #fffbeb;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎓 ゼミ・講義用：発表者決定ツール</h1>
+    <p>自動ルーレットと手動指名（リストから選択）のハイブリッド仕様。選ばれた対象は自動除外されます。</p>
+</header>
+
+<div class="container">
+    <!-- 左パネル群 -->
+    <div class="left-panels">
+        <!-- 名簿入力カード -->
+        <div class="card">
+            <label for="memberInput">1. メンバー/グループ名簿（改行区切り）</label>
+            <textarea id="memberInput" oninput="updatePool()">第1班 (混雑緩和)
+第2班 (民泊分析)
+第3班 (SNSマーケ)
+第4班 (伝統文化)
+第5班 (自然保護)
+学生A
+学生B
+学生C
+学生D</textarea>
+            <div class="stats" id="statsDisplay">待機中: 0件</div>
+            <button class="btn" style="font-size: 0.85rem; padding: 6px 12px; background-color: #64748b; margin-top: 10px; box-shadow: none;" onclick="resetAll()">データをリセット</button>
+        </div>
+
+        <!-- 手動指名カード -->
+        <div class="card">
+            <label>2. 手動で指名・除外（ボタンをクリック）</label>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 0;">特定の班を狙い撃ちで指名したい場合は、以下から直接選んでください。</p>
+            <div class="manual-list" id="manualListArea">
+                <!-- 動的にボタンが生成されます -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 右パネル：メイン表示 -->
+    <div class="card lottery-panel">
+        <div class="display-box" id="rouletteDisplay">Ready</div>
+        <button class="btn" id="startBtn" onclick="startLottery()">ランダム抽選スタート！</button>
+    </div>
+</div>
+
+<!-- 下部：当選履歴 -->
+<div class="card history-section">
+    <label>決定した発表・発言順</label>
+    <div class="history-list" id="historyList"></div>
+</div>
+
+<script>
+    let memberPool = [];
+    let history = [];
+    let isRunning = false;
+    let timer = null;
+
+    // 名簿が変更されたとき、または初期化時のプール更新
+    function updatePool() {
+        if (isRunning) return;
+        const text = document.getElementById('memberInput').value;
+        memberPool = text.split('\n').map(name => name.trim()).filter(name => name !== '');
+        
+        document.getElementById('statsDisplay').innerText = `現在、残り ${memberPool.length} 件が未選択です`;
+        
+        // メイン画面の表示制御
+        if (memberPool.length === 0) {
+            if(history.length === 0) {
+                document.getElementById('rouletteDisplay').innerText = "登録なし";
+            }
+            document.getElementById('startBtn').disabled = true;
+        } else {
+            if (document.getElementById('rouletteDisplay').innerText === "登録なし" || document.getElementById('rouletteDisplay').innerText === "Ready") {
+                document.getElementById('rouletteDisplay').innerText = "Ready";
+            }
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        // 手動選択用ボタンリストの再構築
+        renderManualButtons();
+    }
+
+    // 手動選択ボタンのレンダリング
+    function renderManualButtons() {
+        const area = document.getElementById('manualListArea');
+        area.innerHTML = '';
+        
+        if (memberPool.length === 0) {
+            area.innerHTML = '<span style="color:#94a3b8; font-size:0.9rem;">残りのメンバーはいません</span>';
+            return;
+        }
+
+        memberPool.forEach((name) => {
+            const btn = document.createElement('button');
+            btn.className = 'manual-btn';
+            btn.innerText = name;
+            btn.onclick = () => selectManually(name);
+            area.appendChild(btn);
+        });
+    }
+
+    // 手動で特定のメンバーを選択した時の処理
+    function selectManually(name) {
+        if (isRunning) return;
+        
+        const index = memberPool.indexOf(name);
+        if (index === -1) return;
+
+        // 画面の演出切り替え
+        const display = document.getElementById('rouletteDisplay');
+        display.classList.remove('winner');
+        display.classList.add('manual-selected');
+        display.innerText = name;
+
+        // 履歴への追加（手動フラグ付き）
+        history.push({ name: name, type: 'manual' });
+        updateHistoryDisplay();
+
+        // プールからの除外とUI同期
+        memberPool.splice(index, 1);
+        document.getElementById('memberInput').value = memberPool.join('\n');
+        
+        updatePool();
+        checkCompletion();
+    }
+
+    // ランダムルーレットの開始
+    function startLottery() {
+        if (isRunning || memberPool.length === 0) return;
+        
+        isRunning = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('memberInput').disabled = true;
+        
+        const display = document.getElementById('rouletteDisplay');
+        display.className = 'display-box'; // クラスの初期化
+        
+        let duration = 2000; 
+        let intervalTime = 50; 
+        let elapsed = 0;
+
+        timer = setInterval(() => {
+            const randomIndex = Math.floor(Math.random() * memberPool.length);
+            display.innerText = memberPool[randomIndex];
+            elapsed += intervalTime;
+            
+            if (elapsed >= duration - 800 && intervalTime === 50) {
+                clearInterval(timer);
+                intervalTime = 120; // 終盤に向けて減速演出
+                startSlowTicking();
+            }
+        }, intervalTime);
+
+        function startSlowTicking() {
+            timer = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * memberPool.length);
+                display.innerText = memberPool[randomIndex];
+                elapsed += intervalTime;
+
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    stopLottery();
+                }
+            }, intervalTime);
+        }
+    }
+
+    // ルーレットの確定処理
+    function stopLottery() {
+        const display = document.getElementById('rouletteDisplay');
+        const winnerIndex = Math.floor(Math.random() * memberPool.length);
+        const winner = memberPool[winnerIndex];
+        
+        display.innerText = winner;
+        display.classList.add('winner');
+        
+        history.push({ name: winner, type: 'random' });
+        updateHistoryDisplay();
+        
+        memberPool.splice(winnerIndex, 1);
+        document.getElementById('memberInput').value = memberPool.join('\n');
+        
+        isRunning = false;
+        document.getElementById('memberInput').disabled = false;
+        
+        updatePool();
+        checkCompletion();
+    }
+
+    // 全員選び終わったかのチェック
+    function checkCompletion() {
+        if (memberPool.length === 0) {
+            document.getElementById('startBtn').disabled = true;
+            setTimeout(() => {
+                alert("全ての対象の選択が完了しました！");
+            }, 400);
+        }
+    }
+
+    // 履歴表示の更新
+    function updateHistoryDisplay() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        history.forEach((item, index) => {
+            const div = document.createElement('div');
+            // 手動かランダムかでデザインのバッジを変える
+            div.className = `history-item ${item.type === 'manual' ? 'manual-badge' : ''}`;
+            
+            const typeLabel = item.type === 'manual' ? '👈指名' : '';
+            div.innerHTML = `<span class="num">${index + 1}番手:</span> ${item.name} <small style="color:#d97706; font-weight:bold;">${typeLabel}</small>`;
+            list.appendChild(div);
+        });
+    }
+
+    // リセット
+    function resetAll() {
+        if (isRunning) return;
+        if (confirm("履歴をリセットし、現在入力されているテキストをベースに最初からやり直しますか？")) {
+            history = [];
+            updateHistoryDisplay();
+            const display = document.getElementById('rouletteDisplay');
+            display.className = 'display-box';
+            display.innerText = "Ready";
+            updatePool();
+        }
+    }
+
+    // 初回読み込み
+    updatePool();
+</script>
+
+</body>
+</html>
