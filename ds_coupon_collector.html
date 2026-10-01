@@ -3,374 +3,866 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>課題：京野菜カードと幾何分布シミュレーター</title>
+    <title>観光データサイエンス：スタンプラリーと「90%コンプの錯覚」</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- MathJax for Math Rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap');
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif;
         }
-        .main-container {
-            width: 100%;
-            max-width: 750px;
-        }
-        .assignment-box, .explanation-box {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .assignment-box h2, .explanation-box h2 {
-            color: #d35400;
-            text-align: center;
-            margin-top: 0;
-        }
-        .assignment-box h3, .explanation-box h3 {
-            color: #2c3e50;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 5px;
-        }
-        .assignment-box ol { padding-left: 20px; }
-        .assignment-box li { margin-bottom: 10px; }
-
-        .simulator-container {
-            width: 100%;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            padding: 25px 30px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .settings { margin-bottom: 20px; }
-        .settings label {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-right: 10px;
-        }
-        .settings input {
-            width: 80px;
-            padding: 8px;
-            font-size: 1.1em;
-            text-align: center;
-            border: 2px solid #bdc3c7;
-            border-radius: 5px;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 25px 0;
-        }
-        .controls button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #e67e22;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-weight: bold;
-        }
-        .controls button.secondary { background-color: #2c3e50; }
-        .controls button:hover { opacity: 0.85; }
-
-        .status-display {
-            padding: 15px;
-            border-radius: 8px;
-            background: #fdf3e6;
-            min-height: 120px;
-        }
-        .coupon-grid {
+        .stamp-grid {
             display: grid;
-            gap: 5px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+            gap: 6px;
         }
-        .coupon {
-            width: 100%;
-            padding-bottom: 100%;
-            position: relative;
-            border-radius: 5px;
-            background-color: #bdc3c7;
+        @keyframes stamp-bounce {
+            0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+            50% { transform: scale(1.18) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
-        .coupon.collected { background-color: #2ecc71; }
-        .coupon.target { background-color: #e74c3c; animation: pulse 1.5s infinite; }
-        .coupon span {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: white; font-weight: bold;
-            font-size: 0.8rem;
-        }
-        #simulation-log {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #34495e;
-            height: 50px;
-        }
-        .results {
-            margin-top: 20px;
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        #avg-trials {
-            color: #c0392b;
-            font-size: 2em;
-            font-weight: bold;
-        }
-        .chart-container {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid #ecf0f1;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        .anim-stamp {
+            animation: stamp-bounce 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
     </style>
 </head>
-<body>
-<div class="main-container">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-16">
 
-    <div class="assignment-box">
-        <h2>課題：京野菜カードと「あと1枚の壁」</h2>
-        <h3>状況設定</h3>
-        <p>
-            京都の食品会社が、新しいスナック菓子を発売しました。おまけとして、賀茂なす、聖護院だいこん、九条ねぎといった京野菜のカードが1枚入っています。
-            
-            あなたは熱心にカードを集め、もう少しでコンプリートです！
-        </p>
+<header class="bg-slate-950/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 py-4 px-4">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+        <div class="flex items-center space-x-3">
+            <div class="p-2.5 bg-gradient-to-tr from-amber-500 to-rose-600 rounded-xl shadow-lg shadow-amber-500/20">
+                <i data-lucide="plane-takeoff" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold tracking-widest text-amber-400 uppercase bg-amber-950/80 border border-amber-800 px-2.5 py-0.5 rounded-full">グローバル観光学科 / データ科学Ⅱ / 記述統計① 確率分布</span>
+                <h1 class="text-xl md:text-2xl font-black text-white tracking-tight">「90%集まった！」の落とし穴：ガチャとスタンプラリーの数学</h1>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 text-xs bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-700 text-slate-300">
+            <i data-lucide="globe" class="w-4 h-4 text-amber-400"></i>
+            <span>観光キャンペーン・ノベルティ設計における数理マジック</span>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 mt-8 space-y-8">
+
+    <section class="bg-slate-800/90 rounded-2xl p-6 md:p-8 border border-slate-700 shadow-xl backdrop-blur">
+        <div class="flex items-center space-x-3 text-amber-400 mb-4">
+            <i data-lucide="map-pin" class="w-7 h-7"></i>
+            <h2 class="text-xl font-bold text-white">CASE STUDY：世界100都市スタンプラリーの「90%の壁」</h2>
+        </div>
         
-        <h3>問題</h3>
-        <ol>
-            <li>
-                <strong>直感と検証</strong><br>
-                カードの<mark>総種類数</mark>を <b>10</b> に設定してください。あなたが既に9種類を集めているとき、最後の1枚を引くのに必要な平均購入回数は何回だと思いますか？直感で予想してから、シミュレーターで確かめてください。
-            </li>
-            <li>
-                <strong>分布の観察</strong><br>
-                シミュレーションを繰り返すと、下に<mark>確率分布グラフ</mark>が描かれます。青い棒グラフ（シミュレーション結果）が、オレンジの線グラフ（理論値）に徐々に近づいていくことを確認しましょう。
-            </li>
-            <li>
-                <strong>考察 (発展)</strong><br>
-                カードの総種類数を <b>5</b> や <b>20</b> に変えると、グラフの形（特にオレンジの線の傾き）はどう変わるでしょうか？その形が意味すること（出やすさ、出にくさ）を考察してみましょう。
-            </li>
-        </ol>
-    </div>
+        <div class="space-y-4 text-slate-300 text-sm md:text-base leading-relaxed">
+            <div class="bg-slate-900/80 border-l-4 border-amber-500 p-4 rounded-r-xl text-slate-200 space-y-2">
+                <p class="font-bold text-amber-300 text-base">✈️ ストーリー設定</p>
+                <p>
+                    あなたは世界100都市を巡る航空会社のスタンプラリーに挑戦中。ランダムで毎回1都市のスタンプが当たります。<br>
+                    夢中で旅行を続け、ついに <b>90都市（全体の90%）</b> のスタンプが集まりました！<br>
+                    「よーし！90%終わったから、ゴールまであと1割の旅行で済むぞ！」…そう思っていませんか？
+                </p>
+            </div>
 
-    <div class="simulator-container">
-        <h2>ラストワン・シミュレーター</h2>
-        <div class="settings">
-            <label for="total-types">カードの総種類数:</label>
-            <input type="number" id="total-types" value="10" min="2" max="50">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                    <span class="text-xs font-bold text-sky-400 uppercase tracking-wider block mb-1">直感（私たちの思い込み）</span>
+                    <p class="text-xs text-slate-300 leading-relaxed">「90%集まったんだから、旅のコスト・飛行機に乗った回数も <b>全体の90%は消化済み</b> のはずだ！」</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                    <span class="text-xs font-bold text-rose-400 uppercase tracking-wider block mb-1">確率統計の現実（数学の答え）</span>
+                    <p class="text-xs text-slate-300 leading-relaxed">「実はフライト回数のうち <b>約半分（48%）が『最後の10%（10都市）』に奪われる！</b> まだ半分しか終わっていない！」</p>
+                </div>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">なぜそうなるの？</span>
+                    <p class="text-xs text-slate-300 leading-relaxed">スタンプが集まるほど「持っている都市の被り（重複）」が激増し、新しいスタンプが出る確率が激減するから！</p>
+                </div>
+            </div>
         </div>
-        <div class="status-display">
-            <div id="coupon-grid" class="coupon-grid"></div>
-            <div id="simulation-log">設定を確認し、シミュレーションを開始してください</div>
-        </div>
-        <div class="controls">
-            <button onclick="runSingleLastOneSim()">あと1枚を引くまで試行</button>
-            <button class="secondary" onclick="runMonteCarloLastOne(100)">100セット試行</button>
-        </div>
-        <div class="results">
-            <h3>統計結果</h3>
-            <p>平均試行回数: <span id="avg-trials">0.00</span></p>
-            <p>総シミュレーションセット数: <span id="total-simulations">0</span></p>
-            <button onclick="reset()">リセット</button>
-        </div>
-        <div class="chart-container">
-            <h3>確率分布グラフ</h3>
-            <canvas id="distributionChart"></canvas>
-        </div>
-    </div>
-    
-    <div class="explanation-box">
-        <h2>このシミュレーションで学ぶ「幾何分布」とは？</h2>
-        <p>
-            今回のシミュレーションは、統計学で「<strong>幾何分布 (Geometric Distribution)</strong>」と呼ばれる確率分布を扱っています。
-        </p>
-        <h3>キーアイディア 💡</h3>
-        <p>
-            幾何分布は、「コイントスで初めて表が出るまでに何回かかるか？」のように、<strong>成功するまで何かを繰り返し試行したとき、成功するまでの回数が従う確率分布</strong>です。<br>
-            今回の課題では、「成功 = 最後の1枚のカードを引くこと」に相当します。
-        </p>
-        <h3>グラフの形が意味すること 📈</h3>
-        <p>
-            グラフを見ると、試行回数「1回」の確率が最も高く、回数が増えるにつれて確率が下がっていく（裾の長い）形をしています。これは、
-        </p>
-        <ul>
-            <li><strong>最も起こりやすいのは、すぐに成功する（1回目で出る）こと。</strong></li>
-            <li><strong>しかし、運が悪いと非常に多くの回数がかかってしまう（裾が長い）可能性がある。</strong></li>
-        </ul>
-        <p>
-            ということを示しています。あなたの直感（平均10回のはず）とシミュレーション結果（平均10回）が一致したのは、この分布の持つ「裾の長さ（稀にものすごく回数がかかるケース）」が平均値を押し上げているためです。
-            グラフのオレンジ色の線が幾何分布の理論値であり、シミュレーションを繰り返すほど、結果が理論に近づいていくのが分かります。
-        </p>
-        <a href="https://bellcurve.jp/statistics/course/6988.html" target="_blank">本気解説</a>
-    </div>
+    </section>
 
-</div>
+    <section class="bg-slate-800/90 rounded-2xl p-6 md:p-8 border border-slate-700 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-slate-700 gap-4">
+            <div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-6 h-6 text-amber-400"></i>
+                    インタラクティブ・シミュレーター
+                </h2>
+                <p class="text-slate-400 text-xs mt-1">都市数 $N$ と目標達成率 $K\%$ を自由に変えて「ダブリの沼」を実験しよう</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4 bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                <div class="flex items-center space-x-2">
+                    <label for="select-n" class="text-xs font-bold text-slate-300">総都市数 ($N$):</label>
+                    <select id="select-n" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 font-bold text-sky-400 focus:ring-2 focus:ring-sky-500 focus:outline-none text-sm">
+                        <option value="20">20 都市</option>
+                        <option value="50">50 都市</option>
+                        <option value="100" selected>100 都市</option>
+                        <option value="200">200 都市</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <label for="select-pct" class="text-xs font-bold text-slate-300">検証ポイント ($K\%$):</label>
+                    <select id="select-pct" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 font-bold text-amber-400 focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm">
+                        <option value="50">50% 到達時 (前半/後半)</option>
+                        <option value="80">80% 到達時</option>
+                        <option value="90" selected>⚡ 90% 到達時（残りわずか！）</option>
+                        <option value="95">95% 到達時</option>
+                        <option value="99">99% 到達時</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="mt-8 bg-slate-950 rounded-2xl p-6 border border-slate-800 shadow-2xl space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+                    <i data-lucide="scale" class="w-5 h-5"></i>
+                    直感の罠：「集まったスタンプ数」 vs 「費やしたフライト回数」
+                </h3>
+                <span class="text-xs text-slate-500">（進捗ギャップの視覚化）</span>
+            </div>
+
+            <!-- Progress Bar 1: Stamp collected percentage -->
+            <div>
+                <div class="flex justify-between items-center text-xs md:text-sm font-semibold mb-2">
+                    <span class="flex items-center gap-2 text-slate-300">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                        ① 集まったスタンプ（見た目の達成度）
+                    </span>
+                    <span id="lbl-type-pct" class="text-emerald-400 font-extrabold text-sm md:text-base">90.0% (90 / 100都市)</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden p-0.5 border border-slate-800">
+                    <div id="bar-type-pct" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 90%"></div>
+                </div>
+            </div>
+
+            <!-- Progress Bar 2: Flight cost spent percentage -->
+            <div>
+                <div class="flex justify-between items-center text-xs md:text-sm font-semibold mb-2">
+                    <span class="flex items-center gap-2 text-slate-300">
+                        <i data-lucide="plane" class="w-4 h-4 text-amber-400"></i>
+                        ② 消化したフライトコスト（実際の努力の消化率）
+                    </span>
+                    <span id="lbl-cost-pct" class="text-amber-400 font-extrabold text-sm md:text-base">52.5% (平均 272.5 / 518.7回)</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-4 overflow-hidden p-0.5 border border-slate-800">
+                    <div id="bar-cost-pct" class="bg-gradient-to-r from-amber-500 to-rose-500 h-full rounded-full transition-all duration-300" style="width: 52.5%"></div>
+                </div>
+            </div>
+
+            <!-- Gap Explanation Box -->
+            <div id="gap-message-box" class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 text-xs md:text-sm leading-relaxed text-slate-200">
+                <!-- JS Inserted Dynamic Message -->
+            </div>
+        </div>
+
+        <!-- Simulation Buttons -->
+        <div class="mt-6 space-y-4">
+            <div class="flex flex-wrap gap-3">
+                <button id="btn-anim-sim" onclick="startAnimatedSim()" class="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 active:scale-95 text-sm">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    <span>1周旅行してみる (リアルタイム表示)</span>
+                </button>
+                <button onclick="runMonteCarlo(100)" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white font-bold px-5 py-2.5 rounded-xl transition active:scale-95 text-sm">
+                    <i data-lucide="fast-forward" class="w-4 h-4"></i>
+                    <span>100人分実験</span>
+                </button>
+                <button onclick="runMonteCarlo(1000)" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20 active:scale-95 text-sm">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    <span>1000人一括実験 (大数実験)</span>
+                </button>
+                <button onclick="resetAll()" class="flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition text-sm">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>リセット</span>
+                </button>
+            </div>
+
+            <!-- Status Banner -->
+            <div id="status-banner" class="bg-slate-950/60 border border-slate-700/80 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-2 text-xs md:text-sm text-slate-300">
+                <div class="flex items-center space-x-2">
+                    <span id="status-badge" class="bg-slate-700 text-slate-200 font-bold px-2.5 py-0.5 rounded-md text-xs">待機中</span>
+                    <span id="status-text" class="font-medium">ボタンを押して実験を開始してください。</span>
+                </div>
+                <div id="live-counter" class="font-bold text-amber-400 hidden">
+                    現在のフライト数: <span id="current-flight-num" class="text-base text-white">0</span> 回
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Display Grid -->
+        <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 text-center">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">前半 (指定%まで) の平均</span>
+                <div id="stat-first-avg" class="text-2xl font-black text-sky-400 mt-1">272.5</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">理論値: <span id="theo-first-avg">272.5</span> 回</div>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 text-center">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">後半 (残り) の平均</span>
+                <div id="stat-remaining-avg" class="text-2xl font-black text-rose-400 mt-1">246.2</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">理論値: <span id="theo-remaining-avg">246.2</span> 回</div>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 text-center">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">フルコンプ平均合計</span>
+                <div id="stat-total-avg" class="text-2xl font-black text-white mt-1">518.7</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">理論値: <span id="theo-total-avg">518.7</span> 回</div>
+            </div>
+            <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4 text-center">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">試行人数・サンプル数</span>
+                <div id="stat-sample-count" class="text-2xl font-black text-emerald-400 mt-1">0</div>
+                <div class="text-[10px] text-slate-500 mt-0.5">実測データ</div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>
+                    パスポート・スタンプ帳
+                </h3>
+                <div class="flex items-center space-x-3 text-[11px] font-medium text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-sky-500 rounded-sm inline-block"></span> 前半都市</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-amber-400 rounded-sm inline-block"></span> 難関の後半都市</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-slate-800 rounded-sm inline-block"></span> 未獲得</span>
+                </div>
+            </div>
+            <div id="stamp-grid" class="stamp-grid bg-slate-950 p-4 rounded-xl border border-slate-800 max-h-64 overflow-y-auto">
+                <!-- Stamps generated by JS -->
+            </div>
+        </div>
+
+        <!-- Charts Container -->
+        <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-slate-700/80">
+            <div>
+                <div class="mb-3">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-sky-400"></i>
+                        フライト回数の前半・後半の内訳比較
+                    </h3>
+                    <p class="text-xs text-slate-400">「90都市集める労力」と「残り10都市にかかる労力」のアンバランスさ</p>
+                </div>
+                <div class="relative h-64 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <canvas id="breakdownChart"></canvas>
+                </div>
+            </div>
+
+            <div>
+                <div class="mb-3">
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-400"></i>
+                        フルコンプまでの総フライト数の分布（個人の運の差）
+                    </h3>
+                    <p class="text-xs text-slate-400">平均518回だが「運が悪いと1000回かかる」右に長いグラフ（幾何分布の累積）</p>
+                </div>
+                <div class="relative h-64 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <canvas id="histChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-800/90 rounded-2xl p-6 md:p-8 border border-slate-700 shadow-xl space-y-8">
+        <div class="flex items-center space-x-3 text-amber-400 border-b border-slate-700 pb-4">
+            <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+            <div>
+                <h2 class="text-xl font-bold text-white">解説：「ガチャの沼」の数学</h2>
+                <p class="text-slate-400 text-xs">数学アレルギーでも大丈夫！日常の例えで仕組みを解き明かします。</p>
+            </div>
+        </div>
+
+        <div class="text-slate-300 text-sm leading-relaxed space-y-6">
+
+            <!-- Lesson 1: Intuition -->
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h3 class="font-bold text-amber-400 text-base flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    1. なぜ「90%集まった」のに半分しか終わっていないの？
+                </h3>
+                <div class="space-y-3 text-slate-300 text-sm">
+                    <p>
+                        身近なソーシャルゲームのガチャや、カプセルトイ（ガチャガチャ）を思い出してください。
+                    </p>
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <p class="font-bold text-emerald-400">🎯 スタート直後（スタンプ0個のとき）</p>
+                        <p class="text-xs text-slate-300">どのスタンプが出ても「やったー！新しい都市だ！」となります。ダブリは0%。当たる確率は <b class="text-white">100%</b> です。</p>
+                    </div>
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <p class="font-bold text-rose-400">🎯 90都市集まったあと（残り10都市のとき）</p>
+                        <p class="text-xs text-slate-300">
+                            引いたスタンプの <b>90%（10回中9回）は「もう持ってる都市（被り）」</b> になってしまいます！<br>
+                            新しいスタンプが出る確率はたったの <b class="text-white">10%（10回に1回）</b> しかありません。
+                        </p>
+                    </div>
+                    <p>
+                        つまり、終盤になればなるほど「ハズレ（被り）」ばかりを引くことになり、<b>1都市を増やすために必要な飛行機の回数が爆発的に増える</b>のです。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lesson 2: Geometric Distribution Explainer -->
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h3 class="font-bold text-sky-400 text-base flex items-center gap-2">
+                    <i data-lucide="dices" class="w-5 h-5"></i>
+                    2. 核心の数学：「幾何分布（Geometric Distribution）」
+                </h3>
+                <p>
+                    今回のシミュレーションは、統計学で<b>「幾何分布」</b>と呼ばれる確率分布を扱っています。一言で言うと<br>
+                    <b class="text-amber-300">『当たる確率が $p$ のくじを、最初に当たりが出るまで引き続ける回数のルール』</b>のことです。
+                </p>
+
+                <div class="bg-slate-900/90 p-5 rounded-xl border border-slate-800 space-y-3">
+                    <p class="font-bold text-sky-300 text-sm">💡 平均回数は「確率の逆数（$1/p$）」</p>
+                    <p class="text-xs leading-relaxed text-slate-300">
+                        成功確率が $p$ のとき、当たりが出るまでにかかる平均回数は <b class="text-white text-sm">$\frac{1}{p}$ 回</b> になります。
+                    </p>
+                    <ul class="list-disc list-inside text-xs space-y-1.5 text-slate-300 pl-2">
+                        <li>サイコロで「1」の目を出す確率：$p = \frac{1}{6}$ $\rightarrow$ 平均 <b>6回</b> 振れば出る！</li>
+                        <li>90都市持っている時、新しい都市が出る確率：$p = \frac{10}{100} = \frac{1}{10}$ $\rightarrow$ 平均 <b>10回</b> フライトが必要！</li>
+                        <li>99都市持っている時、最後の1都市が出る確率：$p = \frac{1}{100} = 0.01$ $\rightarrow$ 平均 <b>100回</b> フライトが必要！</li>
+                        <li>統計学をさらに深く学びたい方は、<a href="https://bellcurve.jp/statistics/course/6988.html" target="_blank" class="text-amber-400 hover:text-amber-300 underline">本気解説</a> もぜひご覧ください。</li>
+                    </ul>
+                </div>
+
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    スタンプラリー全体は、この<b>「最初は当たりやすい幾何分布」から「最後は激ムズな幾何分布」まで、100個の幾何分布を順番にクリアしていくゲーム</b>です。終盤の幾何分布（特に最後の10個）があまりにも重いため、全体のコストの半分近くを占めてしまうのです。<br>
+                </p>
+            </div>
+
+            <!-- Lesson 3: Memoryless property & Trap -->
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h3 class="font-bold text-rose-400 text-base flex items-center gap-2">
+                    <i data-lucide="flame" class="w-5 h-5"></i>
+                    3. 幾何分布の恐ろしい性質：「無記憶性（ハマりの正体）」
+                </h3>
+                <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                    幾何分布には<b>「無記憶性（むきおくせい）」</b>という性質があります。これは<b>「過去に何回連続で外れたかを、確率の神様は覚えていない（無履歴）」</b>という意味です。
+                </p>
+                <div class="bg-rose-950/40 border border-rose-900/80 p-4 rounded-xl text-xs space-y-2 text-rose-200">
+                    <p class="font-bold text-rose-300">⚠️ 「もう100回も外れたから、そろそろ当たるはず！」の嘘</p>
+                    <p class="leading-relaxed">
+                        最後の1都市（確率1%）を狙って100回連続で外れたとします。しかし、101回目のフライトで当たる確率は、<b>やっぱり1%のまま</b>です。<br>
+                        過去の不運は未来の成功確率を上げてくれません。これがソーシャルゲームで何万円も課金してしまう「ガチャ沼」の正体です。
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lesson 4: Mathematical Formula -->
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                <h3 class="font-bold text-emerald-400 text-base flex items-center gap-2">
+                    <i data-lucide="calculator" class="w-5 h-5"></i>
+                    4. 数学のきれいな数式（クーポン収集問題）
+                </h3>
+                <p class="text-xs text-slate-300">
+                    専門用語ではこれを<a href="https://ja.wikipedia.org/wiki/クーポンコレクター問題" target="_blank" class="text-amber-400 hover:text-amber-300 underline">クーポン収集家問題（Coupon Collector's Problem）</a>と呼びます。100都市コンプリートに必要な合計フライト数の平均（期待値） $\mathbb{E}[T]$ は、以下の美しい足し算で計算できます：
+                </p>
+
+                <div class="my-4 text-center text-amber-300 font-serif text-base md:text-lg bg-slate-900/90 py-3 rounded-lg border border-slate-800 shadow-inner overflow-x-auto">
+                    $$ \mathbb{E}[T] = 100 \times \left( \frac{1}{100} + \frac{1}{99} + \frac{1}{98} + \dots + \frac{1}{2} + \frac{1}{1} \right) \approx 518.7 \text{ 回} $$
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <span class="font-bold text-sky-400">前半90都市（0% $\to$ 90%）の計算</span>
+                        <p class="text-slate-300 font-serif text-sm">$$ \mathbb{E}[T_{\text{前半}}] = 100 \sum_{i=11}^{100} \frac{1}{i} \approx 272.5 \text{ 回} $$</p>
+                        <p class="text-slate-400 text-[11px]">全フライトの約 <b>52.5%</b></p>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <span class="font-bold text-rose-400">後半10都市（90% $\to$ 100%）の計算</span>
+                        <p class="text-slate-300 font-serif text-sm">$$ \mathbb{E}[T_{\text{後半}}] = 100 \sum_{i=1}^{10} \frac{1}{i} \approx 246.2 \text{ 回} $$</p>
+                        <p class="text-slate-400 text-[11px]">たった10都市に全フライトの <b>47.5%</b> が集中！</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson 5: Practical application -->
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-3">
+                <h3 class="font-bold text-amber-400 text-base flex items-center gap-2">
+                    <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                    5. ビジネス・マーケティングへの応用（アプリ開発者の知恵）
+                </h3>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    もし観光アプリやゲームで「完全なランダム確率」でスタンプラリーを作ってしまうと、<b>90%集まったユーザーは激しいダブリに疲弊し、離脱（アプリを削除）</b>してしまいます。<br>
+                    そのため、賢いWebサービスやソーシャルゲームでは以下のような対策（UX設計）が組み込まれています：
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                        <strong class="text-emerald-400 block mb-1">① 天井（てんじょう）機能</strong>
+                        <p class="text-slate-400">「300回引いたら好きなスタンプを1つプレゼント」という救済措置（幾何分布の不運を遮断）。</p>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                        <strong class="text-sky-400 block mb-1">② 未獲得補正（スマート補正）</strong>
+                        <p class="text-slate-400">所持率が90%を超えたユーザーには、未獲得スタンプの出現率を自動的に引き上げる仕様。</p>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                        <strong class="text-amber-400 block mb-1">③ トレード機能</strong>
+                        <p class="text-slate-400">「自分がダブったスタンプ」と「他人がダブったスタンプ」をユーザー同士で交換できるようにする。</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
 
 <script>
-    let allTrialResults = [];
-    let distributionChart;
+    // 100 Famous Tourism Cities Data
+    const CITIES_DATA = [
+        { name: "東京/羽田", icon: "✈️" }, { name: "パリ", icon: "🗼" }, { name: "ローマ", icon: "🏛️" }, { name: "カイロ", icon: "🗿" },
+        { name: "ニューヨーク", icon: "🗽" }, { name: "シドニー", icon: "🦘" }, { name: "アグラ", icon: "🕌" }, { name: "リオデジャネイロ", icon: "🌴" },
+        { name: "ロンドン", icon: "🏰" }, { name: "バンコク", icon: "🛺" }, { name: "シンガポール", icon: "🦁" }, { name: "ドバイ", icon: "🏙️" },
+        { name: "ソウル", icon: "⛩️" }, { name: "ホノルル", icon: "🌺" }, { name: "アテネ", icon: "🏛️" }, { name: "イスタンブール", icon: "🕌" },
+        { name: "バルセロナ", icon: "⛪" }, { name: "ヴェネツィア", icon: "🚣" }, { name: "北京", icon: "🐉" }, { name: "マチュピチュ", icon: "⛰️" },
+        { name: "クスコ", icon: "🦙" }, { name: "トロント", icon: "🍁" }, { name: "オークランド", icon: "🇳🇿" }, { name: "アムステルダム", icon: "🌷" },
+        { name: "ウィーン", icon: "🎻" }, { name: "プラハ", icon: "🏰" }, { name: "ブダペスト", icon: "♨️" }, { name: "サンフランシスコ", icon: "🌉" },
+        { name: "ロサンゼルス", icon: "🎬" }, { name: "ラスベガス", icon: "🎰" }, { name: "カンクン", icon: "🏖️" }, { name: "ブエノスアイレス", icon: "💃" },
+        { name: "ケープタウン", icon: "🐧" }, { name: "ナイロビ", icon: "🦒" }, { name: "カサブランカ", icon: "🌙" }, { name: "バリ島", icon: "🌺" },
+        { name: "ハノイ", icon: "🍜" }, { name: "アンコールワット", icon: "🛕" }, { name: "クアラルンプール", icon: "🇲🇾" }, { name: "台北", icon: "🧋" },
+        { name: "香港", icon: "🌃" }, { name: "ヘルシンキ", icon: "🇫🇮" }, { name: "ストックホルム", icon: "🇸🇪" }, { name: "オスロ", icon: "🇳🇴" },
+        { name: "コペンハーゲン", icon: "🧜‍♀️" }, { name: "レイキャビク", icon: "♨️" }, { name: "ダブリン", icon: "☘️" }, { name: "エディンバラ", icon: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+        { name: "チューリッヒ", icon: "🧀" }, { name: "ミュンヘン", icon: "🍺" }, { name: "ベルリン", icon: "🇩🇪" }, { name: "ブリュッセル", icon: "🧇" },
+        { name: "リスボン", icon: "🚃" }, { name: "マドリード", icon: "🇪🇸" }, { name: "ニース", icon: "🏖️" }, { name: "ジュネーヴ", icon: "🇨🇭" },
+        { name: "ミラノ", icon: "👗" }, { name: "フィレンツェ", icon: "🎨" }, { name: "ナポリ", icon: "🍕" }, { name: "ドブロブニク", icon: "🏰" },
+        { name: "ワルシャワ", icon: "🇵🇱" }, { name: "ブカレスト", icon: "🇷🇴" }, { name: "ソフィア", icon: "🌹" }, { name: "ザグレブ", icon: "🇭🇷" },
+        { name: "テヘラン", icon: "🇮🇷" }, { name: "ドーハ", icon: "🇶🇦" }, { name: "リヤド", icon: "🇸🇦" }, { name: "テルアビブ", icon: "🇮🇱" },
+        { name: "アンマン", icon: "🇯🇴" }, { name: "トビリシ", icon: "🇬🇪" }, { name: "エレバン", icon: "🇦🇲" }, { name: "バクー", icon: "🇦🇿" },
+        { name: "タシュケント", icon: "🇺🇿" }, { name: "アルマトイ", icon: "🇰🇿" }, { name: "コロンボ", icon: "🇱🇰" }, { name: "カトマンズ", icon: "🏔️" },
+        { name: "ダッカ", icon: "🇧🇩" }, { name: "ヤンゴン", icon: "🇲🇲" }, { name: "ルアンパバーン", icon: "🇱🇦" }, { name: "プーケット", icon: "🏝️" },
+        { name: "セブ島", icon: "🏝️" }, { name: "クイーンズタウン", icon: "🏔️" }, { name: "モルディブ", icon: "🇲🇻" }, { name: "サンノゼ", icon: "🇨🇷" },
+        { name: "ボゴタ", icon: "🇨🇴" }, { name: "キト", icon: "🇪🇨" }, { name: "ラパス", icon: "🇧🇴" }, { name: "サンティアゴ", icon: "🇨🇱" },
+        { name: "フィジー", icon: "🌊" }, { name: "タヒチ", icon: "🏝️" }, { name: "モーリシャス", icon: "🇲🇺" }, { name: "セイシェル", icon: "🇸🇨" },
+        { name: "ウランバートル", icon: "🇲🇳" }, { name: "マカオ", icon: "🇲🇴" }, { name: "マニラ", icon: "🥭" }, { name: "ベグラード", icon: "🇷🇸" },
+        { name: "マスカット", icon: "🇴🇲" }, { name: "ナイロビ", icon: "🦒" }, { name: "サンティアゴ", icon: "🏔️" }, { name: "バセロン", icon: "⛵" }
+    ];
 
-    document.addEventListener('DOMContentLoaded', reset);
-    document.getElementById('total-types').addEventListener('change', reset);
+    // State Variables
+    let totalN = 100;
+    let checkpointPct = 90;
+    let checkpointK = 90;
 
-    function runSingleLastOneSim() {
-        const TOTAL_TYPES = parseInt(document.getElementById('total-types').value);
-        const { trials, history } = getLastOne(TOTAL_TYPES);
-        
-        allTrialResults.push(trials);
-        updateAll();
+    let simulationHistory = [];
+    let animInterval = null;
+    let isSimRunning = false;
 
-        const log = document.getElementById('simulation-log');
-        let i = 0;
-        log.textContent = '';
-        const interval = setInterval(() => {
-            if (i < history.length - 1) {
-                log.textContent = `...${history[i]}はダブり...`;
-            } else {
-                log.textContent = `🎉 ${trials}回目で No.${history[i]} をゲット！`;
-                clearInterval(interval);
+    let breakdownChart = null;
+    let histChart = null;
+
+    // checkpoint到達時に確保する都市のID集合
+    let checkpointReachedCities = new Set();
+
+    function getTheoreticalExpected(n, k) {
+        let first = 0;
+        for (let i = 0; i < k; i++) {
+            first += n / (n - i);
+        }
+        let remaining = 0;
+        for (let i = k; i < n; i++) {
+            remaining += n / (n - i);
+        }
+        return { first, remaining, total: first + remaining };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        initCharts();
+        setupEventListeners();
+        resetAll();
+    });
+
+    function setupEventListeners() {
+        document.getElementById('select-n').addEventListener('change', (e) => {
+            totalN = parseInt(e.target.value);
+            updateCheckpointK();
+            resetAll();
+        });
+
+        document.getElementById('select-pct').addEventListener('change', (e) => {
+            checkpointPct = parseInt(e.target.value);
+            updateCheckpointK();
+            resetAll();
+        });
+    }
+
+    function updateCheckpointK() {
+        checkpointK = Math.floor(totalN * (checkpointPct / 100));
+        if (checkpointK >= totalN) checkpointK = totalN - 1;
+    }
+
+    function simulateSingleRun() {
+        const collected = new Set();
+        let totalDraws = 0;
+        let drawsAtCheckpoint = 0;
+
+        while (collected.size < totalN) {
+            totalDraws++;
+            const drawn = Math.floor(Math.random() * totalN);
+            collected.add(drawn);
+
+            if (collected.size === checkpointK && drawsAtCheckpoint === 0) {
+                drawsAtCheckpoint = totalDraws;
             }
-            i++;
-        }, 300);
-    }
-
-    function runMonteCarloLastOne(times) {
-        const TOTAL_TYPES = parseInt(document.getElementById('total-types').value);
-        for (let i = 0; i < times; i++) {
-            const { trials } = getLastOne(TOTAL_TYPES);
-            allTrialResults.push(trials);
         }
-        updateAll();
-        document.getElementById('simulation-log').textContent = `${times}回のシミュレーションを実行しました。`;
+
+        return {
+            firstTrials: drawsAtCheckpoint,
+            remainingTrials: totalDraws - drawsAtCheckpoint,
+            totalTrials: totalDraws
+        };
     }
-    
-    function getLastOne(totalTypes) {
-        const TARGET_COUPON = totalTypes;
-        let trials = 0;
-        let history = [];
-        while (true) {
-            trials++;
-            const drawnCoupon = Math.floor(Math.random() * totalTypes) + 1;
-            history.push(drawnCoupon);
-            if (drawnCoupon === TARGET_COUPON) break;
+
+    function runMonteCarlo(count) {
+        stopAnimation();
+
+        for (let i = 0; i < count; i++) {
+            simulationHistory.push(simulateSingleRun());
         }
-        return { trials, history };
+
+        updateUI();
+        document.getElementById('status-badge').className = 'bg-emerald-900/80 text-emerald-300 border border-emerald-700 font-bold px-2.5 py-0.5 rounded-md text-xs';
+        document.getElementById('status-badge').textContent = '実験完了';
+        document.getElementById('status-text').textContent = `${count} 人の周遊旅行シミュレーションを実行・集計しました。`;
+        document.getElementById('live-counter').classList.add('hidden');
     }
 
-    function updateAll() {
-        updateStats();
-        updateChart();
+    function startAnimatedSim() {
+        stopAnimation();
+        checkpointReachedCities = new Set(); // ★ クリア
+
+        isSimRunning = true;
+        document.getElementById('btn-anim-sim').disabled = true;
+        document.getElementById('btn-anim-sim').classList.add('opacity-50');
+
+        document.getElementById('status-badge').className = 'bg-amber-900/80 text-amber-300 border border-amber-700 font-bold px-2.5 py-0.5 rounded-md text-xs';
+        document.getElementById('status-badge').textContent = '周遊旅行中';
+        document.getElementById('status-text').textContent = '1つずつ世界を巡ってスタンプを集めています...';
+        document.getElementById('live-counter').classList.remove('hidden');
+
+        const collected = new Set();
+        let flightDraws = 0;
+        let drawsAtCheckpoint = 0;
+
+        renderStampGrid(collected, null);
+
+        const speed = totalN > 100 ? 10 : 25;
+
+        animInterval = setInterval(() => {
+            flightDraws++;
+            const drawn = Math.floor(Math.random() * totalN);
+            collected.add(drawn);
+
+            if (collected.size === checkpointK && drawsAtCheckpoint === 0) {
+                drawsAtCheckpoint = flightDraws;
+                checkpointReachedCities = new Set(collected); // 到達時点の都市を記録
+            }
+
+            document.getElementById('current-flight-num').textContent = flightDraws;
+            renderStampGrid(collected, drawn, checkpointReachedCities);
+
+            if (collected.size === totalN) {
+                stopAnimation();
+                const first = drawsAtCheckpoint;
+                const remaining = flightDraws - drawsAtCheckpoint;
+                
+                simulationHistory.push({
+                    firstTrials: first,
+                    remainingTrials: remaining,
+                    totalTrials: flightDraws
+                });
+
+                document.getElementById('status-badge').className = 'bg-emerald-900/80 text-emerald-300 border border-emerald-700 font-bold px-2.5 py-0.5 rounded-md text-xs';
+                document.getElementById('status-badge').textContent = '100% フルコンプ！';
+                document.getElementById('status-text').textContent = `全${totalN}都市を ${flightDraws} 回のフライトで完了！（前半 ${first} 回 / 後半 ${remaining} 回）`;
+                updateUI();
+            }
+        }, speed);
     }
 
-    function updateStats() {
-        if (allTrialResults.length === 0) return;
-        const totalSum = allTrialResults.reduce((sum, val) => sum + val, 0);
-        const average = (totalSum / allTrialResults.length).toFixed(2);
-        document.getElementById('avg-trials').textContent = average;
-        document.getElementById('total-simulations').textContent = allTrialResults.length;
+    function stopAnimation() {
+        if (animInterval) clearInterval(animInterval);
+        isSimRunning = false;
+        document.getElementById('btn-anim-sim').disabled = false;
+        document.getElementById('btn-anim-sim').classList.remove('opacity-50');
     }
-    
-    function drawCoupons(total) {
-        const grid = document.getElementById('coupon-grid');
+
+    function updateUI() {
+        const theory = getTheoreticalExpected(totalN, checkpointK);
+
+        // Theoretical values update
+        document.getElementById('theo-first-avg').textContent = theory.first.toFixed(1);
+        document.getElementById('theo-remaining-avg').textContent = theory.remaining.toFixed(1);
+        document.getElementById('theo-total-avg').textContent = theory.total.toFixed(1);
+
+        const samples = simulationHistory.length;
+        document.getElementById('stat-sample-count').textContent = samples;
+
+        let avgFirst = 0, avgRem = 0, avgTotal = 0;
+
+        if (samples > 0) {
+            const sumFirst = simulationHistory.reduce((a, b) => a + b.firstTrials, 0);
+            const sumRem = simulationHistory.reduce((a, b) => a + b.remainingTrials, 0);
+            const sumTotal = simulationHistory.reduce((a, b) => a + b.totalTrials, 0);
+
+            avgFirst = sumFirst / samples;
+            avgRem = sumRem / samples;
+            avgTotal = sumTotal / samples;
+        } else {
+            avgFirst = theory.first;
+            avgRem = theory.remaining;
+            avgTotal = theory.total;
+        }
+
+        document.getElementById('stat-first-avg').textContent = avgFirst.toFixed(1);
+        document.getElementById('stat-remaining-avg').textContent = avgRem.toFixed(1);
+        document.getElementById('stat-total-avg').textContent = avgTotal.toFixed(1);
+
+        // Progress Bar 1: Type PCT
+        document.getElementById('lbl-type-pct').textContent = `${checkpointPct}.0% (${checkpointK} / ${totalN}都市)`;
+        document.getElementById('bar-type-pct').style.width = `${checkpointPct}%`;
+
+        // Progress Bar 2: Flight/Cost PCT
+        const costPct = avgTotal > 0 ? (avgFirst / avgTotal) * 100 : (theory.first / theory.total) * 100;
+        document.getElementById('lbl-cost-pct').textContent = `${costPct.toFixed(1)}% (平均 ${avgFirst.toFixed(0)} / ${avgTotal.toFixed(0)}回)`;
+        document.getElementById('bar-cost-pct').style.width = `${costPct.toFixed(1)}%`;
+
+        // Gap Message Box
+        const gapBox = document.getElementById('gap-message-box');
+        const remCostPct = (100 - costPct).toFixed(1);
+        const remCities = totalN - checkpointK;
+
+        gapBox.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                <div class="space-y-1">
+                    <strong class="text-amber-400 font-bold">【直感崩壊の分析結果】</strong><br>
+                    スタンプは全体の <b class="text-emerald-400">${checkpointPct}% (${checkpointK}都市)</b> まで埋まりましたが、必要なフライト総コスト（平均${avgTotal.toFixed(0)}回）のうち達成できたのは <span class="text-amber-400 font-extrabold">${costPct.toFixed(1)}% (${avgFirst.toFixed(0)}回)</span> だけです！<br>
+                    残りのたった <b class="text-rose-400">${100 - checkpointPct}% (${remCities}都市)</b> を埋めるために、<b>旅費コストの ${remCostPct}%（平均 ${avgRem.toFixed(0)} フライト）</b> が依然として残されています。
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+
+        updateCharts(avgFirst, avgRem, theory);
+    }
+
+    function renderStampGrid(collectedSet, currentDrawn, reachedCities = new Set()) {
+        const grid = document.getElementById('stamp-grid');
         grid.innerHTML = '';
-        const columns = Math.min(total, 10);
-        grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
-        for (let i = 1; i <= total; i++) {
-            const couponDiv = document.createElement('div');
-            const span = document.createElement('span');
-            couponDiv.classList.add('coupon');
-            span.textContent = i;
-            if (i < total) {
-                couponDiv.classList.add('collected');
-            } else {
-                couponDiv.classList.add('target');
+
+        for (let i = 0; i < totalN; i++) {
+            const city = CITIES_DATA[i % CITIES_DATA.length];
+            const badge = document.createElement('div');
+            badge.className = 'h-9 rounded-lg text-xs font-bold flex flex-col items-center justify-center transition-all duration-150 border relative select-none ';
+
+            if (i === currentDrawn) {
+                badge.classList.add('ring-2', 'ring-rose-500', 'z-10', 'anim-stamp');
             }
-            couponDiv.appendChild(span);
-            grid.appendChild(couponDiv);
+
+            if (collectedSet.has(i)) {
+                // ★ 動的判定：チェックポイント到達時に持っていた都市かどうか
+                if (reachedCities.size > 0 && !reachedCities.has(i)) {
+                    // チェックポイント到達後に新しく獲得した「後半ターゲット都市」
+                    badge.classList.add('bg-amber-400', 'border-amber-300', 'text-slate-950', 'shadow-md');
+                } else {
+                    // チェックポイント到達前に獲得した「前半都市」
+                    badge.classList.add('bg-sky-600/90', 'border-sky-400', 'text-white', 'shadow-md');
+                }
+                badge.innerHTML = `<span class="text-sm">${city.icon}</span>`;
+                badge.title = `${i + 1}. ${city.name} (獲得済み)`;
+            } else {
+                // 未獲得の都市
+                // ★ チェックポイント到達後は、残りの未獲得都市枠を黄色点線などで強調することも可能
+                if (collectedSet.size >= checkpointK) {
+                    badge.classList.add('bg-slate-900', 'border-amber-500/50', 'text-amber-400'); // 後半ターゲット枠
+                } else {
+                    badge.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-600');
+                }
+                badge.innerHTML = `<span class="text-[10px]">${i + 1}</span>`;
+                badge.title = `${i + 1}. ${city.name} (未発見)`;
+            }
+
+            // if (collectedSet.has(i)) {
+            //     if (i < checkpointK) {
+            //         badge.classList.add('bg-sky-600/90', 'border-sky-400', 'text-white', 'shadow-md');
+            //     } else {
+            //         badge.classList.add('bg-amber-400', 'border-amber-300', 'text-slate-950', 'shadow-md');
+            //     }
+            //     badge.innerHTML = `<span class="text-sm">${city.icon}</span>`;
+            //     badge.title = `${i + 1}. ${city.name} (獲得済み)`;
+            // } else {
+            //     badge.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-600');
+            //     badge.innerHTML = `<span class="text-[10px]">${i + 1}</span>`;
+            //     badge.title = `${i + 1}. ${city.name} (未発見)`;
+            // }
+
+            grid.appendChild(badge);
         }
     }
 
-    function initializeChart() {
-        const ctx = document.getElementById('distributionChart').getContext('2d');
-        if (distributionChart) {
-            distributionChart.destroy();
-        }
-        distributionChart = new Chart(ctx, {
+    function initCharts() {
+        const ctx1 = document.getElementById('breakdownChart').getContext('2d');
+        breakdownChart = new Chart(ctx1, {
             type: 'bar',
-            data: { labels: [], datasets: [] },
+            data: {
+                labels: ['必要フライト回数'],
+                datasets: [
+                    {
+                        label: '前半フライト (到達まで)',
+                        data: [0],
+                        backgroundColor: 'rgba(56, 189, 248, 0.85)',
+                        borderColor: 'rgba(56, 189, 248, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '後半フライト (残り都市)',
+                        data: [0],
+                        backgroundColor: 'rgba(244, 63, 94, 0.85)',
+                        borderColor: 'rgba(244, 63, 94, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: '回数 (回)', color: '#cbd5e1' }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: { color: '#94a3b8' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { color: '#f8fafc', font: { size: 12, weight: 'bold' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw.toFixed(1)} 回`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctx2 = document.getElementById('histChart').getContext('2d');
+        histChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: '人数 (サンプル数)',
+                        data: [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true, title: { display: true, text: '度数 / 理論上の度数' } },
-                    x: { title: { display: true, text: '成功までの試行回数 (k)' } }
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: '完走までの総フライト数 (区間)', color: '#cbd5e1' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        ticks: { color: '#94a3b8' },
+                        title: { display: true, text: '人数（度数）', color: '#cbd5e1' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { color: '#f8fafc', font: { size: 12, weight: 'bold' } }
+                    }
                 }
             }
         });
     }
 
-    function updateChart() {
-        if (!allTrialResults.length) return;
-        const totalTypes = parseInt(document.getElementById('total-types').value);
-        const p = 1 / totalTypes;
+    function updateCharts(avgFirst, avgRem, theory) {
+        breakdownChart.data.datasets[0].label = `前半 ${checkpointPct}% 達成まで (平均 ${avgFirst.toFixed(1)}回)`;
+        breakdownChart.data.datasets[1].label = `残り ${100 - checkpointPct}% コンプまで (平均 ${avgRem.toFixed(1)}回)`;
+        breakdownChart.data.datasets[0].data = [avgFirst];
+        breakdownChart.data.datasets[1].data = [avgRem];
+        breakdownChart.update();
 
-        const frequencies = {};
-        allTrialResults.forEach(trial => {
-            frequencies[trial] = (frequencies[trial] || 0) + 1;
-        });
+        if (simulationHistory.length > 0) {
+            const totals = simulationHistory.map(s => s.totalTrials);
+            const min = Math.min(...totals);
+            const max = Math.max(...totals);
 
-        const maxTrial = Math.max(20, ...Object.keys(frequencies).map(Number));
-        const labels = Array.from({ length: maxTrial }, (_, i) => i + 1);
-        const simData = labels.map(label => frequencies[label] || 0);
+            const binCount = 12;
+            const binWidth = Math.max(10, Math.ceil((max - min) / binCount));
+            const bins = Array(binCount).fill(0);
+            const binLabels = [];
 
-        const theoreticalData = labels.map(k => Math.pow(1 - p, k - 1) * p * allTrialResults.length);
+            for (let i = 0; i < binCount; i++) {
+                const start = min + i * binWidth;
+                const end = start + binWidth - 1;
+                binLabels.push(`${start}-${end}`);
+            }
 
-        distributionChart.data.labels = labels;
-        distributionChart.data.datasets = [{
-            label: 'シミュレーション結果 (度数)',
-            data: simData,
-            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }, {
-            label: `理論値 (幾何分布 p=1/${totalTypes})`,
-            data: theoreticalData,
-            type: 'line',
-            borderColor: 'rgba(255, 159, 64, 1)',
-            backgroundColor: 'rgba(255, 159, 64, 0.2)',
-            fill: false,
-            tension: 0.1
-        }];
-        distributionChart.update();
+            totals.forEach(val => {
+                let idx = Math.floor((val - min) / binWidth);
+                if (idx >= binCount) idx = binCount - 1;
+                bins[idx]++;
+            });
+
+            histChart.data.labels = binLabels;
+            histChart.data.datasets[0].data = bins;
+            histChart.data.datasets[0].label = `総フライト数分布 (全 ${simulationHistory.length} 人の実験データ)`;
+            histChart.update();
+        }
     }
 
-    function reset() {
-        allTrialResults = [];
-        const totalTypes = parseInt(document.getElementById('total-types').value) || 10;
-        
-        document.getElementById('avg-trials').textContent = '0.00';
-        document.getElementById('total-simulations').textContent = '0';
-        document.getElementById('simulation-log').textContent = 'ボタンを押してシミュレーション開始';
-        
-        drawCoupons(totalTypes);
-        initializeChart();
+    function resetAll() {
+        stopAnimation();
+        simulationHistory = [];
+        checkpointReachedCities = new Set(); // ★ クリア
+        updateCheckpointK();
+
+        document.getElementById('status-badge').className = 'bg-slate-700 text-slate-200 font-bold px-2.5 py-0.5 rounded-md text-xs';
+        document.getElementById('status-badge').textContent = '待機中';
+        document.getElementById('status-text').textContent = 'ボタンを押して実験を開始してください。';
+        document.getElementById('live-counter').classList.add('hidden');
+
+        renderStampGrid(new Set(), null);
+        updateUI();
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise();
+        }
     }
 </script>
 </body>
