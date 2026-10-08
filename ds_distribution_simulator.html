@@ -3,432 +3,907 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【DS講義資料】インタラクティブ確率分布シミュレーター</title>
+    <title>【観光DS】実務で学べる確率分布シミュレーター</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#035485',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        tourism: {
+                            gold: '#d97706',
+                            emerald: '#059669',
+                            rose: '#e11d48',
+                            purple: '#7c3aed'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #005a9c;
-            text-align: center;
-        }
-        .main-container {
-             width: 100%;
-             max-width: 850px;
-        }
-        .intro-box {
-            background-color: #e9f5ff;
-            border-left: 4px solid #007bff;
-            padding: 15px 20px;
-            margin: 10px 0 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        .container {
-            width: 100%;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #dee2e6;
-            margin-bottom: 20px;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-size: 16px;
-            font-weight: 500;
-            color: #495057;
-            position: relative;
-            transition: color 0.3s;
-        }
-        .tab-button:hover {
-            color: #005a9c;
-        }
-        .tab-button.active {
-            color: #005a9c;
+        .active-tab {
+            border-bottom: 3px solid #0284c7;
+            color: #0284c7;
             font-weight: 700;
         }
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #005a9c;
-        }
-        .content {
-            display: none;
-        }
-        .content.active {
-            display: block;
-        }
-        .content h4 {
-            margin-top: 15px;
-            margin-bottom: 5px;
-            color: #005a9c;
-            border-left: 3px solid #007bff;
-            padding-left: 8px;
-        }
-        .content ul {
-            margin-top: 5px;
-            padding-left: 25px;
-            list-style-type: '👉';
-            padding-inline-start: 1em;
-        }
-        .content li {
-            margin-bottom: 5px;
-            padding-left: 8px;
-        }
-        .instruction {
-            margin-top: 20px;
-            font-weight: 500;
-            text-align: center;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-        }
-        .controls label {
-            font-weight: 500;
-        }
-        .controls input[type="number"], .controls input[type="range"] {
-            width: 80px;
-            padding: 5px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        .controls button {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .controls button:hover {
-            background-color: #0056b3;
-        }
-        .chart-container {
-            position: relative;
-            height: 40vh;
-            width: 100%;
+        canvas {
+            touch-action: manipulation;
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen flex flex-col">
 
-<div class="main-container">
-    <h1>確率分布を体験しよう！ 🎲</h1>
-    
-    <div class="intro-box">
-        <h3>そもそも「確率分布」って何？</h3>
-        <p>
-            「分布」と聞くと難しそうですが、これは私たちの身の回りにある「不確かさ」を理解するための、とても便利な<strong>地図</strong>のようなものです。<br>
-            一言でいうと、「<b>ある出来事の、すべての結果と、それぞれの結果が起こる確率を一覧にしたもの</b>」です。
-            例えばサイコロを1回振ると、起こりうる結果は {1, 2, 3, 4, 5, 6} で、それぞれの確率はすべて 1/6 ですね。これをグラフにしたものが最もシンプルな確率分布です。
-        </p>
-    </div>
-
-    <div class="container">
-        <div class="tabs">
-            <button class="tab-button active" onclick="openTab('uniform')">一様分布</button>
-            <button class="tab-button" onclick="openTab('binomial')">二項分布</button>
-            <button class="tab-button" onclick="openTab('normal')">正規分布</button>
-        </div>
-
-        <div id="uniform" class="content active">
-            <h2>一様分布 (Uniform Distribution)</h2>
-            <h4>考え方</h4>
-            <p>これは「<strong>すべての結果が同じ確率で起こる</strong>」という、最も公平でシンプルな分布です。どの目が出やすいという偏りが一切ありません。</p>
-            <h4>身近な例</h4>
-            <ul>
-                <li>サイコロを1回振ったときに出る目</li>
-                <li>ルーレットの針がどこで止まるか</li>
-            </ul>
-            <p class="instruction">👇 下のボタンを押してシミュレーションを開始し、グラフの棒の高さが揃っていく様子を観察しましょう。</p>
-            <div class="controls">
-                <button onclick="runUniform(1)">1回振る</button>
-                <button onclick="runUniform(100)">100回振る</button>
-                <button onclick="resetChart('uniform')">リセット</button>
-                <div id="uniform-total">総試行回数: 0</div>
+    <!-- Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-500 p-2.5 rounded-xl shadow-inner text-white">
+                    <i class="fa-solid fa-plane-departure text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">観光データサイエンス：確率分布シミュレーター</h1>
+                    <p class="text-xs text-slate-400">グローバル観光学科講義資料・「不確実性」をデータで予測する</p>
+                </div>
             </div>
-            <div class="chart-container">
-                <canvas id="uniformChart"></canvas>
+            <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300">
+                <i class="fa-solid fa-graduation-cap text-amber-400"></i>
+                <span>GT / データ科学Ⅱ / 記述統計</span>
             </div>
         </div>
+    </header>
 
-        <div id="binomial" class="content">
-            <h2>二項分布 (Binomial Distribution)</h2>
-            <h4>考え方</h4>
-            <p>コイン投げのように「<strong>『はい』か『いいえ』（成功か失敗）の結果になる試行を、決まった回数繰り返したときの『成功回数』</strong>」の分布。多くの場合、真ん中の回数が一番起こりやすくなります。</p>
-            <h4>身近な例</h4>
-            <ul>
-                <li>コインを10回投げて、表が出た回数</li>
-                <li>バスケットボール選手がフリースローを5回投げて、成功した回数</li>
-            </ul>
-            <p class="instruction">👇 「コインの枚数」と「表の出る確率」を設定して、どのような形の山ができるか試してみましょう。</p>
-            <div class="controls">
-                <label for="n-trials">コインの枚数 (n):</label>
-                <input type="number" id="n-trials" value="10" min="1" max="50">
-                <label for="p-prob">表の出る確率 (p):</label>
-                <input type="range" id="p-prob" value="0.5" min="0" max="1" step="0.01">
-                <button onclick="runBinomial()">100セット試行</button>
-                <button onclick="resetChart('binomial')">リセット</button>
-                <div id="binomial-total">総セット数: 0</div>
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- Intro Banner -->
+        <section class="mb-6 bg-gradient-to-r from-brand-900 via-brand-800 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+            <div class="relative z-10 max-w-4xl">
+                <span class="inline-block px-3 py-1 bg-brand-500/30 text-brand-200 rounded-full text-xs font-semibold tracking-wide uppercase mb-2 border border-brand-400/30">
+                    なぜ観光学で「確率分布」を学ぶのか？
+                </span>
+                <h2 class="text-2xl sm:text-3xl font-extrabold mb-3 leading-snug">
+                    「勘」や「経験」から、データに基づく「リスク管理・マーケティング」へ
+                </h2>
+                <p class="text-slate-200 text-sm sm:text-base leading-relaxed mb-4">
+                    <comment-tag id="1">観光ビジネスは「天候・季節・客層の気まぐれ」など、予測不能な<b>不確実性（確率）</b>に常に囲まれています。
+                    ホテルのオーバーブッキング設定、空港案内所の人員シフト、インバウンドの平均消費額分析など、実務の背後にはすべて<b>「確率分布」</b>が存在します。パラメータをいじってシミュレーションしてみましょう！</comment-tag id="1" text="【基礎統計量との接点を導入に追加】
+実務で重要なのは「平均値（中心）」だけでなく「分散・標準偏差（リスクの振れ幅）」を同時に見ることです。導入文に以下のワンポイントを追加すると、学生が統計量の重要性を意識しやすくなります。
+
+『観光現場での失敗の多くは「平均値」だけを見て対策を立ててしまうことにあります。確率分布を学ぶことで、平均（中心）だけでなく分散・標準偏差（振れ幅）まで把握し、リスクに強い現場運営が可能になります。』" type="suggestion">
+                </p>
             </div>
-            <div class="chart-container">
-                <canvas id="binomialChart"></canvas>
+            <i class="fa-solid fa-chart-line absolute right-6 -bottom-6 text-slate-700/20 text-9xl pointer-events-none"></i>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-x-auto">
+            <nav class="flex border-b border-slate-200 min-w-max" aria-label="Tabs">
+                <button onclick="switchTab('uniform')" id="tab-uniform" class="tab-btn active-tab px-6 py-4 text-sm font-semibold text-slate-600 hover:text-brand-600 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-bus text-amber-500"></i>
+                    <span>1. 一様分布（バス待ち時間）</span>
+                </button>
+                <button onclick="switchTab('binomial')" id="tab-binomial" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-600 hover:text-brand-600 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-hotel text-emerald-500"></i>
+                    <span>2. 二項分布（ホテルキャンセル）</span>
+                </button>
+                <button onclick="switchTab('poisson')" id="tab-poisson" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-600 hover:text-brand-600 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-circle-info text-blue-500"></i>
+                    <span>3. ポアソン分布（案内所来客数）</span>
+                </button>
+                <button onclick="switchTab('normal')" id="tab-normal" class="tab-btn px-6 py-4 text-sm font-semibold text-slate-600 hover:text-brand-600 flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-sack-dollar text-purple-500"></i>
+                    <span>4. 正規分布（インバウンド消費額）</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab 1: Uniform Distribution -->
+        <div id="content-uniform" class="tab-content block">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Explanation Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">基礎概念</span>
+                            <span class="text-xs text-slate-400">Uniform Distribution</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">一様分布（均等な確率）</h3>
+                        <p class="text-xs text-slate-500 mb-4 font-mono">「すべての出来事が全く同じ確率で起きる」状態</p>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-amber-500"></i> 観光実務でのシナリオ
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                空港から観光地へのリムジンバスが<b>15分間隔</b>で定期運行しています。観光客が無作為にバス停に到着したとき、<b>「次のバスが来るまでの待ち時間（0分〜15分）」</b>はどの時間も同じ確率で発生します。
+                            </p>
+                        </div>
+
+                        <comment-tag id="2"><div class="space-y-2 text-xs text-slate-600">
+                            <div class="flex justify-between py-1 border-b border-slate-100">
+                                <span class="font-medium">期待値（平均待ち時間）:</span>
+                                <span class="font-bold text-slate-800" id="uniform-expected">7.5 分</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-100">
+                                <span class="font-medium">特徴:</span>
+                                <span class="text-slate-700">偏りがなく、グラフは平らになる</span>
+                            </div>
+                        </div></comment-tag id="2" text="【一様分布と基礎統計量の関係を補足】
+一様分布（範囲 $a$ から $b$）における期待値 $E(X)$ と分散 $V(X)$ の数式的な説明を簡潔に追加すると効果的です：
+
+・平均値（期待値）: $\mu = \frac{a + b}{2}$ （区間の中央値と一致）
+・分散: $\sigma^2 = \frac{(b - a)^2}{12}$ （運行間隔が広がるほど、二乗に比例して待ち時間の分散＝リスクが大きくなる）
+
+「バスの運行間隔（15分）が2倍（30分）になると、平均待ち時間は2倍（15分）になりますが、待ち時間のばらつき（分散）は4倍になり、観光客の不満のブレが非常に大きくなる」という実務的な意味を補足できます。" type="suggestion">
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100">
+                        <label class="block text-xs font-bold text-slate-700 mb-2">運行間隔 (分): <span id="uniform-interval-val" class="text-brand-600">15</span>分</label>
+                        <input type="range" id="uniform-interval" min="5" max="30" value="15" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-500 mb-4" oninput="updateUniformInterval()">
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="runUniformSim(100)" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 px-3 rounded-xl text-xs font-semibold transition-all">
+                                <i class="fa-solid fa-play mr-1"></i> 100人到着
+                            </button>
+                            <button onclick="runUniformSim(1000)" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                                <i class="fa-solid fa-bolt mr-1"></i> 1000人試行
+                            </button>
+                        </div>
+                        <button onclick="resetUniformSim()" class="w-full mt-2 bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition-all">
+                            リセット
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation & Graph Card -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800">バス待ち時間の観測シミュレーション</h4>
+                            <p class="text-xs text-slate-500">試行回数を増やすほど理論上の「平らな分布」に近づくことを確認しよう</p>
+                        </div>
+                        <div class="text-right bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                            <span class="text-xs text-amber-800 font-semibold block">総試行人数 (サンプル数)</span>
+                            <span class="text-lg font-bold text-amber-900" id="uniform-total-count">0 人</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex-grow min-h-[320px] w-full">
+                        <canvas id="uniformChart"></canvas>
+                    </div>
+
+                    <!-- Business Insight Callout -->
+                    <div class="mt-4 p-3 bg-blue-50 border-l-4 border-brand-500 rounded-r-xl text-xs text-blue-900">
+                        <i class="fa-solid fa-lightbulb text-brand-600 mr-1 font-bold"></i> <b>観光経営のヒント:</b>
+                        平均待ち時間は「間隔の半分（15分運行なら7.5分）」になります。観光客の体感ストレスを減らすには、運行本数を増やすだけでなく「リアルタイム運行状況モニター」を提示して不確実性を消す施策が効果的です。
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="normal" class="content">
-            <h2>正規分布 (Normal Distribution)</h2>
-            <h4>考え方</h4>
-            <p>身長やテストの点数など、自然界や社会で最もよく見られる分布。「<strong>平均値の周りにデータが最も多く集まり、平均から離れるほどデータが少なくなる</strong>」という特徴があり、美しい「ベルカーブ」を描きます。</p>
-            <h4>身近な例</h4>
-            <ul>
-                <li>日本人成人男性の身長</li>
-                <li>大学のテストの点数</li>
-                <li>工場で作られる製品の重さのばらつき</li>
-            </ul>
-            <p class="instruction">👇 「平均」と「標準偏差」を変えると、ベルカーブの形や位置がどう変わるか観察してみましょう。</p>
-            <div class="controls">
-                <label for="mean">平均 (μ):</label>
-                <input type="number" id="mean" value="100" step="1">
-                <label for="stddev">標準偏差 (σ):</label>
-                <input type="number" id="stddev" value="15" min="1" step="1">
-                <button onclick="runNormal()">100個データ生成</button>
-                <button onclick="resetChart('normal')">リセット</button>
-                <div id="normal-total">総データ数: 0</div>
-            </div>
-            <div class="chart-container">
-                <canvas id="normalChart"></canvas>
+        <!-- Tab 2: Binomial Distribution -->
+        <div id="content-binomial" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Control Panel -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full">実務必須</span>
+                            <span class="text-xs text-slate-400">Binomial Distribution</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">二項分布（Yes/Noの試行）</h3>
+                        <p class="text-xs text-slate-500 mb-4 font-mono">「キャンセルする/しない」の2択をN回繰り返した結果</p>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-hotel text-emerald-600"></i> ホテルのオーバーブッキング戦略
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                客室数100室のホテルで、過去のデータから<b>1人あたりのキャンセル率が10%</b>と分かっています。100室ちょうど予約を受けた場合、実際に何室キャンセルが出るかの確率分布です。
+                            </p>
+                        </div>
+
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                    <span>受入予約数 (n):</span>
+                                    <span id="binom-n-val" class="text-emerald-600">100 件</span>
+                                </div>
+                                <input type="range" id="binom-n" min="20" max="200" step="5" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" oninput="updateBinomParams()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                    <span>平均キャンセル率 (p):</span>
+                                    <span id="binom-p-val" class="text-emerald-600">10 %</span>
+                                </div>
+                                <input type="range" id="binom-p" min="1" max="40" step="1" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" oninput="updateBinomParams()">
+                            </div>
+                        </div>
+
+                        <comment-tag id="3"><div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs space-y-1">
+                            <div class="flex justify-between text-emerald-900">
+                                <span>理論上の平均キャンセル数:</span>
+                                <span class="font-bold" id="binom-expected-val">10.0 室</span>
+                            </div>
+                            <div class="flex justify-between text-emerald-900">
+                                <span>標準偏差 (ブレの範囲):</span>
+                                <span class="font-bold" id="binom-sd-val">±3.0 室</span>
+                            </div>
+                        </div></comment-tag id="3" text="【二項分布の基礎統計量との関係説明を追加】
+二項分布の試行回数 $n$、成功（キャンセル）確率 $p$ と統計量の公式をカード内に併記すると学びが深まります：
+
+・期待値（平均値）: $E(X) = n \cdot p$
+・分散: $V(X) = n \cdot p \cdot (1 - p)$
+・標準偏差: $\sigma = \sqrt{n \cdot p \cdot (1 - p)}$
+
+【解説ポイント】
+「キャンセル率 $p = 10\%$ （$0.1$）のとき、$p(1-p) = 0.09$ となります。標準偏差 $\sigma = \sqrt{100 \times 0.09} = 3.0$ 室です。この『±3.0室』というブレの大きさが、オーバーブッキング設定時の部屋溢れリスクの安全域を決める重要指標（標準偏差）になります。」" type="suggestion">
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+                        <button onclick="runBinomialSim(100)" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                            <i class="fa-solid fa-play mr-1"></i> 100日間をシミュレーション
+                        </button>
+                        <button onclick="resetBinomialSim()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition-all">
+                            リセット
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chart & Analytics Panel -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800">1日あたりの発生キャンセル室数分布</h4>
+                            <p class="text-xs text-slate-500">何室キャンセルが発生する日が多いか？（山型の分布）</p>
+                        </div>
+                        <div class="text-right bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                            <span class="text-xs text-emerald-800 font-semibold block">シミュレーション日数</span>
+                            <span class="text-lg font-bold text-emerald-900" id="binom-total-days">0 日分</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex-grow min-h-[320px] w-full">
+                        <canvas id="binomialChart"></canvas>
+                    </div>
+
+                    <!-- Business Insight Callout -->
+                    <div class="mt-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl text-xs text-emerald-900">
+                        <i class="fa-solid fa-hotel text-emerald-600 mr-1 font-bold"></i> <b>支配人の判断:</b>
+                        平均10室キャンセルが出るからといって「110室」予約を受けると、約半数の確率で「部屋が足りない（満室溢れ）」損害が発生します。確率分布で「部屋溢れリスク5%未満」になる安全なオーバーブッキング数を計算するのがデータサイエンスの実務です。
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<script>
-    // 以前のJavaScriptコードと同一のため、ここでは省略します。
-    // 実際のファイルには、前の回答の<script>タグ内のコードを
-    // そのままここに貼り付けてください。
-    let charts = {};
-    const initialData = {
-        uniform: {
-            labels: ['1', '2', '3', '4', '5', '6'],
-            datasets: [{
-                label: '出た回数',
-                data: [0, 0, 0, 0, 0, 0],
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        binomial: {
-            labels: Array.from({length: 11}, (_, i) => i.toString()),
-            datasets: [{
-                label: 'セット数',
-                data: Array(11).fill(0),
-                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        normal: {
-            datasets: [{
-                label: '生成データ (ヒストグラム)',
-                data: [],
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                barPercentage: 1.0,
-                categoryPercentage: 1.0
-            }, {
-                label: '理論上の正規分布曲線',
-                data: [],
-                type: 'line',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 2,
-                fill: false,
-                pointRadius: 0
-            }]
+        <!-- Tab 3: Poisson Distribution -->
+        <div id="content-poisson" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Control Panel -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">窓口・人員計画</span>
+                            <span class="text-xs text-slate-400">Poisson Distribution</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">ポアソン分布（めったに起きない件数）</h3>
+                        <p class="text-xs text-slate-500 mb-4 font-mono">「単位時間あたりに平均λ回起きる出来事の回数」</p>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-blue-600"></i> 観光案内所のランダムな訪客数
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                駅前の外国語観光案内所には、1時間あたり平均して<b>λ（ラムダ）組</b>の旅行者が訪れます。ある特定の1時間に「何組の客が来るか」の確率分布です。
+                            </p>
+                        </div>
+
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                    <span>1時間あたりの平均訪客数 (λ):</span>
+                                    <span id="poisson-lambda-val" class="text-blue-600">5 組/時間</span>
+                                </div>
+                                <input type="range" id="poisson-lambda" min="1" max="20" step="1" value="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updatePoissonParams()">
+                            </div>
+                        </div>
+
+                        <comment-tag id="4"><div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-xs space-y-1">
+                            <div class="flex justify-between text-blue-900">
+                                <span>1時間で「0組」の確率:</span>
+                                <span class="font-bold" id="poisson-zero-prob">0.67 %</span>
+                            </div>
+                            <div class="flex justify-between text-blue-900">
+                                <span>平均以上の客（6組以上）が来る確率:</span>
+                                <span class="font-bold" id="poisson-busy-prob">38.4 %</span>
+                            </div>
+                        </div></comment-tag id="4" text="【ポアソン分布の極めて重要な基礎統計量的特徴を追加】
+ポアソン分布の最大の数学的特徴は『平均（期待値）と分散が等しい』という点です。ここをカードに注記すると理解が一気に深まります：
+
+・期待値（平均値）: $E(X) = \lambda$
+・分散: $V(X) = \lambda$
+・標準偏差: $\sigma = \sqrt{\lambda}$
+
+【解説ポイント】
+「平均来客数 $\lambda$ が大きくなると、平均だけでなく『混雑の不規則なブレ幅（分散＝ $\lambda$）』も大きくなります。平均 $\lambda = 5$ のときは標準偏差 $\sigma \approx 2.24$ 人のブレですが、繁忙期で $\lambda = 16$ になると標準偏差 $\sigma = 4$ 人となり、混雑ピーク時の波が大きくなります。」" type="suggestion">
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+                        <button onclick="runPoissonSim(100)" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                            <i class="fa-solid fa-clock mr-1"></i> 100時間をシミュレーション
+                        </button>
+                        <button onclick="resetPoissonSim()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition-all">
+                            リセット
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chart & Analytics Panel -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800">時間あたりの訪客数分布</h4>
+                            <p class="text-xs text-slate-500">平均5人でも、時には10人以上押しかけて大混雑することもある</p>
+                        </div>
+                        <div class="text-right bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200">
+                            <span class="text-xs text-blue-800 font-semibold block">観測時間</span>
+                            <span class="text-lg font-bold text-blue-900" id="poisson-total-hours">0 時間</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex-grow min-h-[320px] w-full">
+                        <canvas id="poissonChart"></canvas>
+                    </div>
+
+                    <!-- Business Insight Callout -->
+                    <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-xl text-xs text-blue-900">
+                        <i class="fa-solid fa-users text-blue-600 mr-1 font-bold"></i> <b>シフト最適化のヒント:</b>
+                        平均5人対応のスタッフ（1人あたり10分対応で計1時間6人対応可能）しか配置していないと、右側の「8人以上」押し寄せる時間帯に行列がパンクします。混雑ピーク確率に合わせて予備の言語ボランティアを待機させる根拠になります。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Normal Distribution -->
+        <div id="content-normal" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Control Panel -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full">統計の王様</span>
+                            <span class="text-xs text-slate-400">Normal Distribution</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">正規分布（ベルカーブ）</h3>
+                        <p class="text-xs text-slate-500 mb-4 font-mono">「平均値の周りに最も集まり、左右対称に広がる」</p>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-sack-dollar text-purple-600"></i> 訪日外国人客（インバウンド）の消費額
+                            </h4>
+                            <p class="text-sm text-slate-600 leading-relaxed">
+                                欧米からの観光客1人当たりの<b>旅行消費額（日本での支出）</b>は、平均値を中心に左右にばらつきます。平均（μ）と標準偏差（σ: ばらつき）を設定してみましょう。
+                            </p>
+                        </div>
+
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                    <span>平均消費額 (μ):</span>
+                                    <span id="normal-mean-val" class="text-purple-600">20.0 万円</span>
+                                </div>
+                                <input type="range" id="normal-mean" min="10" max="50" step="1" value="20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600" oninput="updateNormalParams()">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                    <span>標準偏差・ばらつき (σ):</span>
+                                    <span id="normal-sd-val" class="text-purple-600">5.0 万円</span>
+                                </div>
+                                <input type="range" id="normal-sd" min="1" max="15" step="0.5" value="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600" oninput="updateNormalParams()">
+                            </div>
+                        </div>
+
+                        <comment-tag id="5"><div class="bg-purple-50 p-3 rounded-xl border border-purple-200 text-xs space-y-1">
+                            <div class="flex justify-between text-purple-900">
+                                <span>68.3% の旅行客が収まる範囲 (±1σ):</span>
+                                <span class="font-bold" id="normal-68-range">15.0 ~ 25.0 万円</span>
+                            </div>
+                            <div class="flex justify-between text-purple-900">
+                                <span>上位 2.5% の超高額消費層 (富裕層):</span>
+                                <span class="font-bold" id="normal-vip-range">30.0 万円以上</span>
+                            </div>
+                        </div></comment-tag id="5" text="【正規分布と基礎統計量の絶対的ルールを明記】
+正規分布は『平均 $\mu$』と『標準偏差 $\sigma$』の2つの統計量だけで分布の全体像が100%決定される極めて強力な分布です。
+
+・平均値: $\mu$ （山の頂点の位置）
+・標準偏差: $\sigma$ （山の広がり・裾野の幅）
+・分散: $\sigma^2$
+
+【実務上の経験則（3シグマルール）】
+・$\mu \pm 1\sigma$ の範囲内に全体の 約 68.3% のデータが入る
+・$\mu \pm 2\sigma$ の範囲内に全体の 約 95.4% のデータが入る
+・$\mu + 2\sigma$ （平均より標準偏差の2倍以上高額）を超える客層（上位約2.5%）をマーケティングでは『富裕層（VIP）』と定義する定量的根拠になります。" type="suggestion">
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-100 space-y-2">
+                        <button onclick="runNormalSim(200)" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm">
+                            <i class="fa-solid fa-users mr-1"></i> 200人のアンケート結果を調査
+                        </button>
+                        <button onclick="resetNormalSim()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-1.5 rounded-lg text-xs font-medium transition-all">
+                            リセット
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chart Panel -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800">インバウンド消費額のヒストグラム & 理論曲線</h4>
+                            <p class="text-xs text-slate-500">実データ（棒グラフ）と綺麗な正規分布曲線（オレンジ線）の比較</p>
+                        </div>
+                        <div class="text-right bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
+                            <span class="text-xs text-purple-800 font-semibold block">調査サンプル数</span>
+                            <span class="text-lg font-bold text-purple-900" id="normal-total-samples">0 人</span>
+                        </div>
+                    </div>
+
+                    <div class="relative flex-grow min-h-[320px] w-full">
+                        <canvas id="normalChart"></canvas>
+                    </div>
+
+                    <!-- Business Insight Callout -->
+                    <div class="mt-4 p-3 bg-purple-50 border-l-4 border-purple-500 rounded-r-xl text-xs text-purple-900">
+                        <i class="fa-solid fa-bullseye text-purple-600 mr-1 font-bold"></i> <b>ターゲットマーケティング:</b>
+                        平均値（20万円）だけに合わせた商品を作るのはNG！正規分布の性質を知ると、「全体の68%を占めるボリュームゾーン（15万〜25万円向け提案）」と「上位2.5%のVIP層（30万円以上向けラグジュアリー体験）」を明確に区別して商品開発できます。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Store instances of Chart.js
+        let charts = {};
+
+        // Data Storage for Simulations
+        let simData = {
+            uniform: [],
+            binomial: [],
+            poisson: [],
+            normal: []
+        };
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active-tab'));
+
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+
+            // Force chart resize on view
+            if (charts[tabName]) {
+                charts[tabName].resize();
+            }
         }
-    };
 
-    function createChart(id, type, data, options) {
-        const ctx = document.getElementById(id).getContext('2d');
-        if (charts[id.replace('Chart', '')]) {
-            charts[id.replace('Chart', '')].destroy();
-        }
-        charts[id.replace('Chart', '')] = new Chart(ctx, { type, data, options });
-    }
-
-    window.onload = function() {
-        createChart('uniformChart', 'bar', JSON.parse(JSON.stringify(initialData.uniform)), { scales: { y: { beginAtZero: true, title: { display: true, text: '回数' } } }, responsive: true, maintainAspectRatio: false });
-        createChart('binomialChart', 'bar', JSON.parse(JSON.stringify(initialData.binomial)), { scales: { y: { beginAtZero: true, title: { display: true, text: 'セット数' } }, x: { title: {display: true, text: '成功回数'} } }, responsive: true, maintainAspectRatio: false });
-        createChart('normalChart', 'bar', JSON.parse(JSON.stringify(initialData.normal)), {
-            scales: {
-                x: { type: 'linear', beginAtZero: false, title: { display: true, text: '値' } },
-                y: { beginAtZero: true, title: { display: true, text: 'データ数' } }
-            },
-            responsive: true,
-            maintainAspectRatio: false
-        });
-        normalDataPoints = []; // Reset on load
-    };
-
-    function openTab(tabName) {
-        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-        document.querySelector(`.tab-button[onclick="openTab('${tabName}')"]`).classList.add('active');
-    }
-
-    function resetChart(chartName) {
-        const chart = charts[chartName];
-        if (chartName === 'uniform') {
-            chart.data.datasets[0].data.fill(0);
-            document.getElementById('uniform-total').innerText = `総試行回数: 0`;
-        } else if (chartName === 'binomial') {
-            const n = parseInt(document.getElementById('n-trials').value);
-            chart.data.labels = Array.from({length: n + 1}, (_, i) => i.toString());
-            chart.data.datasets[0].data = Array(n + 1).fill(0);
-            document.getElementById('binomial-total').innerText = `総セット数: 0`;
-        } else if (chartName === 'normal') {
-            normalDataPoints = [];
-            chart.data.datasets[0].data = [];
-            chart.data.datasets[1].data = [];
-            chart.data.labels = [];
-            document.getElementById('normal-total').innerText = `総データ数: 0`;
-        }
-        chart.update();
-    }
-    
-    // --- Simulation Functions ---
-    
-    function runUniform(times) {
-        const chart = charts.uniform;
-        const data = chart.data.datasets[0].data;
-        for (let i = 0; i < times; i++) {
-            const roll = Math.floor(Math.random() * 6);
-            data[roll]++;
-        }
-        const total = data.reduce((a, b) => a + b, 0);
-        document.getElementById('uniform-total').innerText = `総試行回数: ${total}`;
-        chart.update();
-    }
-
-    function runBinomial() {
-        const chart = charts.binomial;
-        const n = parseInt(document.getElementById('n-trials').value);
-        const p = parseFloat(document.getElementById('p-prob').value);
-        
-        // Ensure labels and data array are correct size
-        if (chart.data.labels.length !== n + 1) {
-            chart.data.labels = Array.from({length: n + 1}, (_, i) => i.toString());
-            chart.data.datasets[0].data = Array(n + 1).fill(0);
-        }
-        
-        const currentData = chart.data.datasets[0].data;
-        
-        for (let i = 0; i < 100; i++) {
-            let successes = 0;
-            for (let j = 0; j < n; j++) {
-                if (Math.random() < p) {
-                    successes++;
+        // ==========================================
+        // 1. UNIFORM DISTRIBUTION SIMULATION
+        // ==========================================
+        function initUniformChart() {
+            const ctx = document.getElementById('uniformChart').getContext('2d');
+            charts.uniform = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '待ち時間になった人数',
+                        data: [],
+                        backgroundColor: 'rgba(217, 119, 6, 0.6)',
+                        borderColor: 'rgba(217, 119, 6, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: '待ち時間 (分)' } },
+                        y: { beginAtZero: true, title: { display: true, text: '人数 (回)' } }
+                    }
                 }
-            }
-            if (successes <= n) {
-                currentData[successes]++;
-            }
-        }
-        
-        const total = currentData.reduce((a, b) => a + b, 0);
-        document.getElementById('binomial-total').innerText = `総セット数: ${total}`;
-        chart.update();
-    }
-
-    let normalDataPoints = [];
-    function runNormal() {
-        const chart = charts.normal;
-        const mean = parseFloat(document.getElementById('mean').value);
-        const stddev = parseFloat(document.getElementById('stddev').value);
-
-        if (isNaN(mean) || isNaN(stddev) || stddev <= 0) {
-            alert("有効な平均値と正の標準偏差を入力してください。");
-            return;
+            });
+            updateUniformInterval();
         }
 
-        for (let i = 0; i < 100; i++) {
+        function updateUniformInterval() {
+            const interval = parseInt(document.getElementById('uniform-interval').value);
+            document.getElementById('uniform-interval-val').innerText = interval;
+            document.getElementById('uniform-expected').innerText = (interval / 2).toFixed(1) + ' 分';
+            resetUniformSim();
+        }
+
+        function runUniformSim(count) {
+            const interval = parseInt(document.getElementById('uniform-interval').value);
+            for (let i = 0; i < count; i++) {
+                // Random time between 0 and interval
+                simData.uniform.push(Math.random() * interval);
+            }
+
+            // Create 5-bin or 10-bin histogram depending on interval
+            const numBins = Math.min(interval, 10);
+            const binSize = interval / numBins;
+            const bins = new Array(numBins).fill(0);
+            const labels = [];
+
+            for (let i = 0; i < numBins; i++) {
+                labels.push(`${(i * binSize).toFixed(1)}~${((i + 1) * binSize).toFixed(1)}分`);
+            }
+
+            simData.uniform.forEach(val => {
+                let binIdx = Math.floor(val / binSize);
+                if (binIdx >= numBins) binIdx = numBins - 1;
+                bins[binIdx]++;
+            });
+
+            charts.uniform.data.labels = labels;
+            charts.uniform.data.datasets[0].data = bins;
+            charts.uniform.update();
+
+            document.getElementById('uniform-total-count').innerText = `${simData.uniform.length} 人`;
+        }
+
+        function resetUniformSim() {
+            simData.uniform = [];
+            if (charts.uniform) {
+                charts.uniform.data.labels = [];
+                charts.uniform.data.datasets[0].data = [];
+                charts.uniform.update();
+            }
+            document.getElementById('uniform-total-count').innerText = '0 人';
+        }
+
+        // ==========================================
+        // 2. BINOMIAL DISTRIBUTION SIMULATION
+        // ==========================================
+        function initBinomialChart() {
+            const ctx = document.getElementById('binomialChart').getContext('2d');
+            charts.binomial = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'そのキャンセル室数になった日数',
+                        data: [],
+                        backgroundColor: 'rgba(5, 150, 105, 0.6)',
+                        borderColor: 'rgba(5, 150, 105, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'キャンセルが発生した室数' } },
+                        y: { beginAtZero: true, title: { display: true, text: '日数 (回)' } }
+                    }
+                }
+            });
+            updateBinomParams();
+        }
+
+        function updateBinomParams() {
+            const n = parseInt(document.getElementById('binom-n').value);
+            const p = parseInt(document.getElementById('binom-p').value) / 100;
+
+            document.getElementById('binom-n-val').innerText = `${n} 件`;
+            document.getElementById('binom-p-val').innerText = `${(p * 100).toFixed(0)} %`;
+
+            const expected = n * p;
+            const sd = Math.sqrt(n * p * (1 - p));
+
+            document.getElementById('binom-expected-val').innerText = `${expected.toFixed(1)} 室`;
+            document.getElementById('binom-sd-val').innerText = `±${sd.toFixed(1)} 室`;
+
+            resetBinomialSim();
+        }
+
+        function runBinomialSim(days) {
+            const n = parseInt(document.getElementById('binom-n').value);
+            const p = parseInt(document.getElementById('binom-p').value) / 100;
+
+            for (let d = 0; d < days; d++) {
+                let cancellations = 0;
+                for (let i = 0; i < n; i++) {
+                    if (Math.random() < p) cancellations++;
+                }
+                simData.binomial.push(cancellations);
+            }
+
+            // Generate label range around expected
+            const maxC = Math.max(...simData.binomial, Math.ceil(n * p * 2));
+            const minC = Math.max(0, Math.min(...simData.binomial, Math.floor(n * p - 10)));
+            
+            const labels = [];
+            const counts = [];
+
+            for (let i = minC; i <= maxC; i++) {
+                labels.push(`${i}室`);
+                counts.push(simData.binomial.filter(x => x === i).length);
+            }
+
+            charts.binomial.data.labels = labels;
+            charts.binomial.data.datasets[0].data = counts;
+            charts.binomial.update();
+
+            document.getElementById('binom-total-days').innerText = `${simData.binomial.length} 日分`;
+        }
+
+        function resetBinomialSim() {
+            simData.binomial = [];
+            if (charts.binomial) {
+                charts.binomial.data.labels = [];
+                charts.binomial.data.datasets[0].data = [];
+                charts.binomial.update();
+            }
+            document.getElementById('binom-total-days').innerText = '0 日分';
+        }
+
+        // ==========================================
+        // 3. POISSON DISTRIBUTION SIMULATION
+        // ==========================================
+        function initPoissonChart() {
+            const ctx = document.getElementById('poissonChart').getContext('2d');
+            charts.poisson = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '該当する人数が来た時間数',
+                        data: [],
+                        backgroundColor: 'rgba(2, 132, 199, 0.6)',
+                        borderColor: 'rgba(2, 132, 199, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: '1時間あたりの訪客数 (組)' } },
+                        y: { beginAtZero: true, title: { display: true, text: '時間数' } }
+                    }
+                }
+            });
+            updatePoissonParams();
+        }
+
+        function updatePoissonParams() {
+            const lambda = parseInt(document.getElementById('poisson-lambda').value);
+            document.getElementById('poisson-lambda-val').innerText = `${lambda} 組/時間`;
+
+            // Poisson probability formula: P(X=k) = (lambda^k * e^-lambda) / k!
+            const zeroProb = Math.exp(-lambda) * 100;
+            document.getElementById('poisson-zero-prob').innerText = `${zeroProb.toFixed(2)} %`;
+
+            // Calculate prob for k > lambda
+            let cumProb = 0;
+            for (let k = 0; k <= lambda; k++) {
+                cumProb += (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
+            }
+            const busyProb = (1 - cumProb) * 100;
+            document.getElementById('poisson-busy-prob').innerText = `${Math.max(0, busyProb).toFixed(1)} %`;
+
+            resetPoissonSim();
+        }
+
+        function factorial(n) {
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) result *= i;
+            return result;
+        }
+
+        // Knuth's algorithm for Poisson random variable
+        function getPoissonRandom(lambda) {
+            const L = Math.exp(-lambda);
+            let k = 0;
+            let p = 1;
+            do {
+                k++;
+                p *= Math.random();
+            } while (p > L);
+            return k - 1;
+        }
+
+        function runPoissonSim(hours) {
+            const lambda = parseInt(document.getElementById('poisson-lambda').value);
+
+            for (let h = 0; h < hours; h++) {
+                simData.poisson.push(getPoissonRandom(lambda));
+            }
+
+            const maxK = Math.max(...simData.poisson, lambda + 8);
+            const labels = [];
+            const counts = [];
+
+            for (let k = 0; k <= maxK; k++) {
+                labels.push(`${k}組`);
+                counts.push(simData.poisson.filter(x => x === k).length);
+            }
+
+            charts.poisson.data.labels = labels;
+            charts.poisson.data.datasets[0].data = counts;
+            charts.poisson.update();
+
+            document.getElementById('poisson-total-hours').innerText = `${simData.poisson.length} 時間`;
+        }
+
+        function resetPoissonSim() {
+            simData.poisson = [];
+            if (charts.poisson) {
+                charts.poisson.data.labels = [];
+                charts.poisson.data.datasets[0].data = [];
+                charts.poisson.update();
+            }
+            document.getElementById('poisson-total-hours').innerText = '0 時間';
+        }
+
+        // ==========================================
+        // 4. NORMAL DISTRIBUTION SIMULATION
+        // ==========================================
+        function initNormalChart() {
+            const ctx = document.getElementById('normalChart').getContext('2d');
+            charts.normal = new Chart(ctx, {
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: '実測サンプル (人)',
+                            data: [],
+                            backgroundColor: 'rgba(124, 58, 237, 0.5)',
+                            borderColor: 'rgba(124, 58, 237, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: 0.95
+                        },
+                        {
+                            type: 'line',
+                            label: '理論上の正規分布曲線',
+                            data: [],
+                            borderColor: 'rgba(217, 119, 6, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: '消費額 (万円)' } },
+                        y: { beginAtZero: true, title: { display: true, text: '人数 (人)' } }
+                    }
+                }
+            });
+            updateNormalParams();
+        }
+
+        function updateNormalParams() {
+            const mean = parseFloat(document.getElementById('normal-mean').value);
+            const sd = parseFloat(document.getElementById('normal-sd').value);
+
+            document.getElementById('normal-mean-val').innerText = `${mean.toFixed(1)} 万円`;
+            document.getElementById('normal-sd-val').innerText = `${sd.toFixed(1)} 万円`;
+
+            document.getElementById('normal-68-range').innerText = `${(mean - sd).toFixed(1)} ~ ${(mean + sd).toFixed(1)} 万円`;
+            document.getElementById('normal-vip-range').innerText = `${(mean + 1.96 * sd).toFixed(1)} 万円以上`;
+
+            resetNormalSim();
+        }
+
+        // Box-Muller transform for standard normal variable
+        function getNormalRandom(mean, sd) {
             let u1 = Math.random();
             let u2 = Math.random();
+            while (u1 === 0) u1 = Math.random(); // avoid log(0)
             let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-            normalDataPoints.push(z * stddev + mean);
+            return z * sd + mean;
         }
 
-        const binCount = Math.max(10, Math.floor(Math.sqrt(normalDataPoints.length)));
-        const dataMin = Math.min(...normalDataPoints);
-        const dataMax = Math.max(...normalDataPoints);
-        
-        const binWidth = (dataMax - dataMin) / binCount;
-        const bins = new Array(binCount).fill(0);
-        const labels = new Array(binCount);
+        function runNormalSim(count) {
+            const mean = parseFloat(document.getElementById('normal-mean').value);
+            const sd = parseFloat(document.getElementById('normal-sd').value);
 
-        for(let i=0; i<binCount; i++){
-            labels[i] = (dataMin + i * binWidth).toFixed(1);
+            for (let i = 0; i < count; i++) {
+                simData.normal.push(getNormalRandom(mean, sd));
+            }
+
+            // Create Bins for Histogram
+            const minX = Math.max(0, mean - 3.5 * sd);
+            const maxX = mean + 3.5 * sd;
+            const numBins = 15;
+            const binWidth = (maxX - minX) / numBins;
+
+            const labels = [];
+            const counts = new Array(numBins).fill(0);
+
+            for (let i = 0; i < numBins; i++) {
+                const binStart = minX + i * binWidth;
+                labels.push(`${binStart.toFixed(1)}`);
+            }
+
+            simData.normal.forEach(val => {
+                let binIdx = Math.floor((val - minX) / binWidth);
+                if (binIdx >= 0 && binIdx < numBins) {
+                    counts[binIdx]++;
+                }
+            });
+
+            // Calculate Theoretical PDF Line curve
+            const totalSamples = simData.normal.length;
+            const curveData = labels.map(labelStr => {
+                const x = parseFloat(labelStr);
+                const pdf = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
+                return pdf * totalSamples * binWidth; // Scale PDF to match histogram height
+            });
+
+            charts.normal.data.labels = labels;
+            charts.normal.data.datasets[0].data = counts;
+            charts.normal.data.datasets[1].data = curveData;
+            charts.normal.update();
+
+            document.getElementById('normal-total-samples').innerText = `${simData.normal.length} 人`;
         }
-        
-        normalDataPoints.forEach(point => {
-            let binIndex = Math.floor((point - dataMin) / binWidth);
-            if (binIndex >= binCount) binIndex = binCount - 1;
-            if (binIndex >= 0) bins[binIndex]++;
-        });
 
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = bins;
-        
-        const curveData = [];
-        const pdf = (x, mu, sigma) => (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
-        const scaleFactor = normalDataPoints.length * binWidth;
-        
-        for (let i = 0; i < binCount; i++) {
-            const x = dataMin + i * binWidth;
-            curveData.push({x: x.toFixed(1), y: pdf(x, mean, stddev) * scaleFactor});
+        function resetNormalSim() {
+            simData.normal = [];
+            if (charts.normal) {
+                charts.normal.data.labels = [];
+                charts.normal.data.datasets[0].data = [];
+                charts.normal.data.datasets[1].data = [];
+                charts.normal.update();
+            }
+            document.getElementById('normal-total-samples').innerText = '0 人';
         }
-        
-        chart.data.datasets[1].data = curveData;
 
-        document.getElementById('normal-total').innerText = `総データ数: ${normalDataPoints.length}`;
-        chart.update();
-    }
-
-    document.getElementById('n-trials').addEventListener('change', () => resetChart('binomial'));
-    document.getElementById('mean').addEventListener('change', () => resetChart('normal'));
-    document.getElementById('stddev').addEventListener('change', () => resetChart('normal'));
-</script>
+        // Initialize All Charts on Load
+        window.onload = function() {
+            initUniformChart();
+            initBinomialChart();
+            initPoissonChart();
+            initNormalChart();
+        };
+    </script>
 </body>
 </html>
