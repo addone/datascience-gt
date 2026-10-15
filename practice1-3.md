@@ -111,7 +111,7 @@
 
 相関係数を「計算」しましたが、その数値の「解釈」はもっと重要です。
 
-詳細については、**[相関係数（r）が何を意味しているのか？](https://addone.github.io/datascience-gt/correlation_simulator)** へ進んでください。
+詳細については、**[相関係数（r）が何を意味しているのか？](./correlation_simulator.html)** へ進んでください。
 （Excelの関数でとても簡単なやり方もぜひチェックしてください。）
 
 ---
